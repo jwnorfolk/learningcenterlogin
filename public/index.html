@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Learning Center - Home</title>
+    <style>
+      body{font-family:system-ui,Arial;margin:24px}
+      .topright{position:fixed;right:16px;top:12px;cursor:pointer;color:#0366d6}
+      .options{display:flex;gap:12px}
+      .card{padding:18px;border:1px solid #ddd;border-radius:8px;cursor:pointer}
+      .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:999}
+      .modal-box{background:white;padding:24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:300px}
+      .modal-box h2{margin-top:0}
+      .modal-box label{display:flex;flex-direction:column;margin-bottom:12px;font-weight:500}
+      .modal-box input{padding:8px;border:1px solid #ddd;border-radius:4px;margin-top:4px}
+      .modal-box .buttons{display:flex;gap:8px;margin-top:16px}
+      .modal-box button{padding:8px 16px;border:none;border-radius:4px;cursor:pointer}
+      .modal-box .login-btn{background:#0366d6;color:white}
+      .modal-box .cancel-btn{background:#999;color:white}
+    </style>
+  </head>
+  <body>
+    <a class="topright" id="adminLink" href="#">Admin Login</a>
+    <h1>Learning Center</h1>
+    <div class="options">
+      <div class="card" id="tutoring">Tutoring</div>
+      <div class="card" id="testing">Testing</div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h2>Admin Login</h2>
+        <label>
+          Password
+          <input type="password" id="adminPassword" placeholder="Enter password" />
+        </label>
+        <div class="buttons">
+          <button class="login-btn" id="adminLoginBtn">Login</button>
+          <button class="cancel-btn" id="adminCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const adminLink = document.getElementById('adminLink');
+      const adminModal = document.getElementById('adminModal');
+      const adminPassword = document.getElementById('adminPassword');
+      const adminLoginBtn = document.getElementById('adminLoginBtn');
+      const adminCancelBtn = document.getElementById('adminCancelBtn');
+
+      adminLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        adminModal.style.display = 'flex';
+        adminPassword.focus();
+      });
+
+      adminCancelBtn.addEventListener('click', () => {
+        adminModal.style.display = 'none';
+        adminPassword.value = '';
+      });
+
+      adminLoginBtn.addEventListener('click', async () => {
+        const pwd = adminPassword.value;
+        try {
+          const res = await fetch('/api/admin-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pwd })
+          });
+          if (res.ok) {
+            window.location.href = '/admin.html';
+          } else {
+            alert('Incorrect password');
+            adminPassword.value = '';
+          }
+        } catch (err) {
+          alert('Login failed');
+        }
+      });
+
+      adminPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') adminLoginBtn.click();
+      });
+
+      document.getElementById('tutoring').addEventListener('click', () => {
+        window.location.href = '/tutoring.html';
+      });
+      document.getElementById('testing').addEventListener('click', () => {
+        window.location.href = '/testing.html';
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tutoring — Students</title>
+    <style>
+      body{font-family:system-ui,Arial;margin:18px}
+      .topright{position:fixed;right:16px;top:12px}
+      #search{width:100%;padding:8px;margin-bottom:12px}
+      .student{padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
+      .logged{background:#e6ffed}
+    </style>
+  </head>
+  <body>
+    <a class="topright" href="#">Admin Login</a>
+    <h1>Tutoring — Students</h1>
+    <p><a href="/">← Back to Home</a></p>
+    <input id="search" placeholder="Search students by name or id..." />
+    <div id="list">Loading…</div>
+
+    <script>
+      let students = [];
+
+      async function loadStudents(){
+        try {
+          const res = await fetch('/api/students');
+          students = await res.json();
+          renderList(students);
+        } catch (err) {
+          document.getElementById('list').innerHTML = '<p>Failed to load students</p>';
+        }
+      }
+
+      function renderList(arr){
+        const el = document.getElementById('list');
+        if (!arr.length) { el.innerHTML = '<p>No students</p>'; return }
+        el.innerHTML = '';
+        arr.forEach(s => {
+          const item = document.createElement('div');
+          item.className = 'student' + (s.loggedIn ? ' logged' : '');
+          item.innerHTML = `<div>${s.firstName} ${s.lastName} (Grade ${s.grade})</div><div>${s.loggedIn ? 'LOGGED IN' : ''}</div>`;
+          item.addEventListener('click', () => toggleStudentAndReturnHome(s.firstName, s.lastName));
+          el.appendChild(item);
+        });
+      }
+
+      function filterList(q){
+        q = q.trim().toLowerCase();
+        if (!q) return students;
+        return students.filter(s => (s.firstName + ' ' + s.lastName).toLowerCase().includes(q) || String(s.id).includes(q));
+      }
+
+      document.getElementById('search').addEventListener('input', (e) => {
+        renderList(filterList(e.target.value));
+      });
+
+      // When toggling a student, redirect to the homepage immediately after success
+      async function toggleStudentAndReturnHome(firstName, lastName){
+        try {
+          const res = await fetch('/api/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName })
+          });
+          if (!res.ok) { alert('Failed to toggle student'); return }
+          // On success, go back to home as requested
+          window.location.href = '/';
+        } catch (err) {
+          alert('Failed to toggle student');
+        }
+      }
+
+      loadStudents();
+    </script>
+  </body>
+</html>

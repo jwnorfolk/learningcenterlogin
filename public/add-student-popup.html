@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Add Student</title>
+    <style>
+      body { font-family: system-ui, Arial; margin: 18px; }
+      .box { background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+      label { display:block;margin:8px 0;font-size:14px;color:#333 }
+      input, select { width:100%;padding:8px;border:1px solid #ddd;border-radius:4px }
+      button { margin-top:12px;padding:10px 14px;background:#0366d6;color:#fff;border:none;border-radius:6px;cursor:pointer }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h2 style="margin-top:0">Add Student</h2>
+      <form id="addForm">
+        <label>First Name
+          <input name="firstName" id="firstName" required />
+        </label>
+        <label>Last Name
+          <input name="lastName" id="lastName" required />
+        </label>
+        <label>Grade
+          <select name="grade" id="grade" required>
+            <option value="">--Select--</option>
+            <option>9</option>
+            <option>10</option>
+            <option>11</option>
+            <option>12</option>
+          </select>
+        </label>
+        <button type="submit">Add Student</button>
+      </form>
+      <div id="status" style="margin-top:10px;color:#666;font-size:13px"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById('addForm');
+      const status = document.getElementById('status');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const grade = document.getElementById('grade').value;
+        if (!firstName || !lastName || !grade) {
+          status.textContent = 'Please fill all fields';
+          return;
+        }
+        status.textContent = 'Adding...';
+        try {
+          const res = await fetch('/api/admin/add-student', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName, grade })
+          });
+          if (!res.ok) throw new Error('Request failed');
+          // notify opener to refresh and close
+          if (window.opener && !window.opener.closed) {
+            try { window.opener.location.reload(); } catch(e) { /* ignore */ }
+          }
+          status.textContent = 'Added — closing...';
+          setTimeout(() => window.close(), 500);
+        } catch (err) {
+          console.error(err);
+          status.textContent = 'Failed to add student';
+        }
+      });
+    </script>
+  </body>
+</html>

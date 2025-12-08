@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin — Learning Center</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, Arial;
+        margin: 0;
+        padding: 18px;
+        background: #f6f8fa;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .header h1 {
+        margin: 0;
+      }
+      .header a {
+        color: #0366d6;
+        text-decoration: none;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        border-bottom: 1px solid #ddd;
+      }
+      .tab {
+        padding: 12px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-bottom: 3px solid transparent;
+        color: #666;
+      }
+      .tab.active {
+        color: #0366d6;
+        border-bottom-color: #0366d6;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .data-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background: #f6f8fa;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #ddd;
+        font-size: 13px;
+        color: #333;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+      }
+      tr:hover {
+        background: #f9f9f9;
+      }
+      .loading {
+        padding: 24px;
+        text-align: center;
+        color: #666;
+      }
+      .error {
+        padding: 24px;
+        color: #d73a49;
+        background: #ffeef0;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Admin Dashboard</h1>
+      <div style="display:flex;gap:12px;align-items:center">
+        <button id="addStudentBtn" style="padding:8px 12px;border-radius:6px;border:1px solid #0366d6;background:#0366d6;color:#fff;cursor:pointer">Add Student</button>
+        <a href="/">← Back to Home</a>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="logs">Logs</button>
+      <button class="tab" data-tab="responses">Test Responses</button>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="logs" class="tab-content active">
+      <div class="data-table">
+        <div id="logsContent" class="loading">Loading logs...</div>
+      </div>
+    </div>
+
+    <!-- Responses Tab -->
+    <div id="responses" class="tab-content">
+      <div class="data-table">
+        <div id="responsesContent" class="loading">Loading responses...</div>
+      </div>
+    </div>
+
+    <script>
+      // Open Add Student popup window
+      const addStudentBtn = document.getElementById('addStudentBtn');
+      addStudentBtn.addEventListener('click', () => {
+        const w = 420, h = 360;
+        const left = Math.round((screen.width - w) / 2);
+        const top = Math.round((screen.height - h) / 2);
+        window.open('/add-student-popup.html', 'AddStudent', `width=${w},height=${h},left=${left},top=${top}`);
+      });
+
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          contents.forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+      });
+
+      async function loadLogs() {
+        try {
+          const res = await fetch('/api/admin/logs');
+          const logs = await res.json();
+          renderTable('logsContent', logs);
+        } catch (err) {
+          document.getElementById('logsContent').innerHTML = '<div class="error">Failed to load logs</div>';
+        }
+      }
+
+      async function loadResponses() {
+        try {
+          const res = await fetch('/api/admin/responses');
+          const responses = await res.json();
+          renderTable('responsesContent', responses);
+        } catch (err) {
+          document.getElementById('responsesContent').innerHTML = '<div class="error">Failed to load responses</div>';
+        }
+      }
+
+      function renderTable(elementId, data) {
+        const el = document.getElementById(elementId);
+        if (!data || data.length === 0) {
+          el.innerHTML = '<div class="loading">No data available</div>';
+          return;
+        }
+
+        // Get all unique keys from all rows
+        const keys = [...new Set(data.flatMap(Object.keys))];
+
+        let html = '<table><thead><tr>';
+        keys.forEach(key => {
+          html += `<th>${key}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        data.forEach(row => {
+          html += '<tr>';
+          keys.forEach(key => {
+            const val = row[key] || '';
+            html += `<td>${escapeHtml(String(val))}</td>`;
+          });
+          html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        el.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      loadLogs();
+      loadResponses();
+    </script>
+  </body>
+</html>

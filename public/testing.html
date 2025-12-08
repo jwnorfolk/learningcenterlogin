@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Testing — Test Request Make-Ups/Extended Time</title>
+    <style>
+      body {
+        font-family: system-ui, Arial;
+        margin: 18px;
+        max-width: 600px;
+      }
+      .topright {
+        position: fixed;
+        right: 16px;
+        top: 12px;
+      }
+      .note {
+        background: #fef3cd;
+        border: 1px solid #ffc107;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 18px;
+        font-weight: bold;
+      }
+      .note p {
+        margin: 0 0 6px;
+      }
+      form div {
+        margin-bottom: 16px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      input,
+      select,
+      textarea {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+      }
+      input[type="email"],
+      input[type="text"],
+      input[type="date"],
+      select,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .required::after {
+        content: " *";
+        color: red;
+      }
+      button {
+        padding: 10px 20px;
+        background: #0366d6;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0256c7;
+      }
+      .back-link {
+        margin-bottom: 18px;
+      }
+      .section-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+        margin-top: 12px;
+        margin-bottom: 8px;
+      }
+      .section-note {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="topright" href="#">Admin Login</a>
+    <div class="back-link">
+      <a href="/">← Back to Home</a>
+    </div>
+
+    <h1>Test Request Make-Ups/Extended Time</h1>
+
+    <div class="note">
+      <p>NOTE:</p>
+      <p>You must complete this form BEFORE 3 PM the day before your test.</p>
+      <p>Any sign ups AFTER 3pm may not be processed.</p>
+      <p><strong>3 PM is the cutoff.</strong></p>
+    </div>
+
+    <form id="testForm">
+      <!-- Email -->
+      <div>
+        <label class="required">Email</label>
+        <input type="email" name="email" required />
+      </div>
+
+      
+      <!-- First Name -->
+      <div>
+        <label class="required">Your First Name</label>
+        <input type="text" name="firstName" required />
+      </div>
+      
+      <!-- Last Name -->
+      <div>
+        <label class="required">Your Last Name</label>
+        <input type="text" name="lastName" required />
+      </div>
+
+      <!-- Grade -->
+      <div>
+        <label class="required">What grade are you in?</label>
+        <select name="grade" required>
+          <option value="">-- Select --</option>
+          <option value="9">9th</option>
+          <option value="10">10th</option>
+          <option value="11">11th</option>
+          <option value="12">12th</option>
+        </select>
+      </div>
+
+      <!-- Test Type -->
+      <div>
+        <label class="required">What type of test is this?</label>
+        <select name="testType" required>
+          <option value="">-- Select --</option>
+          <option value="extended-time">Extended Time</option>
+          <option value="makeup-after-school">Make Up Test (After School)</option>
+          <option value="finals-extended">Finals (Extended Time Only)</option>
+        </select>
+      </div>
+
+      <!-- Subject -->
+      <div>
+        <label class="required">What Subject?</label>
+       <select name="subject" required>
+          <option value="">-- Select --</option>
+          <option value="Math">Math</option>
+          <option value="Science">Science</option>
+          <option value="English">English</option>
+          <option value="History/Social Studies">History/Social Studies</option>
+          <option value="Religion">Religion</option>
+          <option value="World Language">World Language</option>
+          <option value="Health">Health</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <!-- Teacher's Name -->
+      <div>
+        <label class="required">Teachers Name</label>
+        <select name="teacherName" required>
+          <option value="">-- Select --</option>
+          <option value="OTHER">OTHER</option>
+          <!-- Add more teacher names as needed -->
+        </select>
+      </div>
+
+      <!-- Teacher Name if Other -->
+      <div id="otherTeacherDiv" style="display: none;">
+        <label>If You Chose "OTHER" for Teachers Name, what is the teachers LAST NAME ONLY</label>
+        <input type="text" name="otherTeacherLastName" />
+      </div>
+
+      <!-- Test Name -->
+      <div>
+        <label class="required">Name of Test (ie Chapter 12 test)</label>
+        <input type="text" name="testName" required />
+      </div>
+
+      <!-- Test Date -->
+      <div>
+        <label class="required">WHAT DATE ARE YOU TAKING THE TEST (NOT TODAY'S DATE):</label>
+        <input type="date" name="testDate" required />
+      </div>
+
+      <!-- Period -->
+      <div>
+        <label class="required">What Period is the Class?</label>
+        <select name="period" required>
+          <option value="">-- Select --</option>
+          <option value="1">Period 1</option>
+          <option value="2">Period 2</option>
+          <option value="3">Period 3</option>
+          <option value="4">Period 4</option>
+          <option value="5">Period 5</option>
+          <option value="6">Period 6</option>
+          <option value="7">Period 7</option>
+          <option value="0">Period 0</option>
+        </select>
+      </div>
+
+      <!-- Submit Button -->
+      <div>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+
+    <script>
+      document.getElementById('testForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(document.getElementById('testForm'));
+        const data = Object.fromEntries(formData);
+
+        try {
+          const res = await fetch('/api/submit-test-response', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          if (!res.ok) {
+            alert('Failed to submit form');
+            return;
+          }
+
+          alert('Your response has been submitted!');
+          window.location.href = '/';
+        } catch (err) {
+          console.error(err);
+          alert('Failed to submit form');
+        }
+      });
+
+      // Show/hide "OTHER" teacher name field
+      document.querySelector('select[name="teacherName"]').addEventListener('change', (e) => {
+        const otherDiv = document.getElementById('otherTeacherDiv');
+        if (e.target.value === 'OTHER') {
+          otherDiv.style.display = 'block';
+        } else {
+          otherDiv.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>

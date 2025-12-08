@@ -1,0 +1,23 @@
+{
+  "name": "learningcenterlogin",
+  "version": "0.1.0",
+  "description": "Skeleton Node.js + Express project with a static frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  ,
+    "xlsx": "^0.18.5"
+    ,
+    "nodemailer": "^6.9.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
