@@ -36,7 +36,17 @@
         const el = document.getElementById('list');
         if (!arr.length) { el.innerHTML = '<p>No students</p>'; return }
         el.innerHTML = '';
-        arr.forEach(s => {
+        // Sort: logged-in students first, then by last name
+        const sorted = [...arr].sort((a, b) => {
+          if (a.loggedIn && !b.loggedIn) return -1;
+          if (!a.loggedIn && b.loggedIn) return 1;
+          // fallback to lastName then firstName
+          const ln = (a.lastName || '').localeCompare(b.lastName || '');
+          if (ln !== 0) return ln;
+          return (a.firstName || '').localeCompare(b.firstName || '');
+        });
+
+        sorted.forEach(s => {
           const item = document.createElement('div');
           item.className = 'student' + (s.loggedIn ? ' logged' : '');
           item.innerHTML = `<div>${s.firstName} ${s.lastName} (Grade ${s.grade})</div><div>${s.loggedIn ? 'LOGGED IN' : ''}</div>`;
