@@ -24,7 +24,7 @@
     <a class="topright" id="adminLink" href="#">Admin Login</a>
     <h1>Learning Center</h1>
     <div class="options">
-      <div class="card" id="tutoring">Tutoring</div>
+      <div class="card" id="tutoring">Homework/Study</div>
       <div class="card" id="testing">Testing</div>
     </div>
 
@@ -43,52 +43,67 @@
     </div>
 
     <script>
+      // Defensive DOM wiring: check elements exist before attaching listeners
       const adminLink = document.getElementById('adminLink');
       const adminModal = document.getElementById('adminModal');
       const adminPassword = document.getElementById('adminPassword');
       const adminLoginBtn = document.getElementById('adminLoginBtn');
       const adminCancelBtn = document.getElementById('adminCancelBtn');
 
-      adminLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        adminModal.style.display = 'flex';
-        adminPassword.focus();
-      });
+      if (adminLink && adminModal && adminPassword) {
+        adminLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          adminModal.style.display = 'flex';
+          try { adminPassword.focus(); } catch (e) {}
+        });
+      } else {
+        console.warn('Admin login elements missing on this page');
+      }
 
-      adminCancelBtn.addEventListener('click', () => {
-        adminModal.style.display = 'none';
-        adminPassword.value = '';
-      });
+      if (adminCancelBtn && adminModal && adminPassword) {
+        adminCancelBtn.addEventListener('click', () => {
+          adminModal.style.display = 'none';
+          adminPassword.value = '';
+        });
+      }
 
-      adminLoginBtn.addEventListener('click', async () => {
-        const pwd = adminPassword.value;
-        try {
-          const res = await fetch('/api/admin-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: pwd })
-          });
-          if (res.ok) {
-            window.location.href = '/admin.html';
-          } else {
-            alert('Incorrect password');
-            adminPassword.value = '';
+      if (adminLoginBtn && adminPassword) {
+        adminLoginBtn.addEventListener('click', async () => {
+          const pwd = adminPassword.value;
+          try {
+            const res = await fetch('/api/admin-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: pwd })
+            });
+            if (res.ok) {
+              window.location.href = '/admin.html';
+            } else {
+              alert('Incorrect password');
+              adminPassword.value = '';
+            }
+          } catch (err) {
+            alert('Login failed');
           }
-        } catch (err) {
-          alert('Login failed');
-        }
-      });
+        });
 
-      adminPassword.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') adminLoginBtn.click();
-      });
+        adminPassword.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') adminLoginBtn.click();
+        });
+      }
 
-      document.getElementById('tutoring').addEventListener('click', () => {
-        window.location.href = '/tutoring.html';
-      });
-      document.getElementById('testing').addEventListener('click', () => {
-        window.location.href = '/testing.html';
-      });
+      const tutoringBtn = document.getElementById('tutoring');
+      const testingBtn = document.getElementById('testing');
+      if (tutoringBtn) {
+        tutoringBtn.addEventListener('click', () => { window.location.href = '/tutoring.html'; });
+      } else {
+        console.warn('Tutoring button not found');
+      }
+      if (testingBtn) {
+        testingBtn.addEventListener('click', () => { window.location.href = '/testing.html'; });
+      } else {
+        console.warn('Testing button not found');
+      }
     </script>
   </body>
 </html>

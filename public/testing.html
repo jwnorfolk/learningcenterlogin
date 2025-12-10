@@ -85,7 +85,6 @@
     </style>
   </head>
   <body>
-    <a class="topright" href="#">Admin Login</a>
     <div class="back-link">
       <a href="/">← Back to Home</a>
     </div>
@@ -160,11 +159,10 @@
 
       <!-- Teacher's Name -->
       <div>
-        <label class="required">Teachers Name</label>
-        <select name="teacherName" required>
+        <label class="required">Teacher's Name (Put OTHER for CHS Teachers)</label>
+        <select name="teacherName" required id="teacherSelect">
           <option value="">-- Select --</option>
           <option value="OTHER">OTHER</option>
-          <!-- Add more teacher names as needed -->
         </select>
       </div>
 
@@ -234,8 +232,31 @@
         }
       });
 
-      // Show/hide "OTHER" teacher name field
-      document.querySelector('select[name="teacherName"]').addEventListener('change', (e) => {
+      // Populate teacher list from server and show/hide "OTHER" teacher name field
+      async function loadTeachers() {
+        try {
+          const res = await fetch('/api/teachers');
+          if (!res.ok) return;
+          const teachers = await res.json();
+          const select = document.getElementById('teacherSelect');
+          // remove any existing options besides the placeholder and OTHER
+          const otherOption = Array.from(select.options).find(o => o.value === 'OTHER');
+          select.innerHTML = '';
+          select.appendChild(new Option('-- Select --',''));
+          // insert teacher names (skip blanks) between rows 4..142 as returned
+          teachers.forEach(name => {
+            const trimmed = (name || '').toString().trim();
+            if (!trimmed) return;
+            select.appendChild(new Option(trimmed, trimmed));
+          });
+          // always keep OTHER at the end
+          select.appendChild(new Option('OTHER','OTHER'));
+        } catch (err) {
+          console.error('Failed to load teachers', err);
+        }
+      }
+
+      document.getElementById('teacherSelect').addEventListener('change', (e) => {
         const otherDiv = document.getElementById('otherTeacherDiv');
         if (e.target.value === 'OTHER') {
           otherDiv.style.display = 'block';
@@ -243,6 +264,8 @@
           otherDiv.style.display = 'none';
         }
       });
+
+      loadTeachers();
     </script>
   </body>
 </html>

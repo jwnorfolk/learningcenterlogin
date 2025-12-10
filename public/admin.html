@@ -104,6 +104,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="logs">Logs</button>
       <button class="tab" data-tab="responses">Test Responses</button>
+      <button class="tab" data-tab="notifications">Email Notifications</button>
     </div>
 
     <!-- Logs Tab -->
@@ -118,6 +119,11 @@
       <div class="data-table">
         <div id="responsesContent" class="loading">Loading responses...</div>
       </div>
+    </div>
+
+    <!-- Email Notifications Tab -->
+    <div id="notifications" class="tab-content">
+      <div id="notificationsContent" class="loading">Loading unsent responses...</div>
     </div>
 
     <script>
@@ -197,8 +203,117 @@
         return div.innerHTML;
       }
 
+      // Small non-blocking toast that auto-removes. Click to dismiss immediately.
+      function showToast(message, timeout = 3500) {
+        const t = document.createElement('div');
+        t.textContent = message;
+        t.style.cssText = 'position:fixed;right:20px;bottom:20px;background:rgba(0,0,0,0.8);color:#fff;padding:10px 14px;border-radius:6px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);font-family:system-ui,Arial;font-size:13px';
+        t.addEventListener('click', () => {
+          if (t.parentNode) t.parentNode.removeChild(t);
+        });
+        document.body.appendChild(t);
+        setTimeout(() => {
+          if (t.parentNode) t.parentNode.removeChild(t);
+        }, timeout);
+      }
+
+      async function loadNotifications() {
+        try {
+          const res = await fetch('/api/admin/unsent-responses');
+          const unsent = await res.json();
+          renderNotifications('notificationsContent', unsent);
+        } catch (err) {
+          document.getElementById('notificationsContent').innerHTML = '<div class="error">Failed to load unsent responses</div>';
+        }
+      }
+
+      function renderNotifications(elementId, data) {
+        const el = document.getElementById(elementId);
+        if (!data || data.length === 0) {
+          el.innerHTML = '<div class="loading">No unsent responses</div>';
+          return;
+        }
+        el.innerHTML = '';
+        data.forEach((response) => {
+          const idx = response.__index;
+          const card = document.createElement('div');
+          card.style.cssText = 'background:white;padding:16px;margin-bottom:16px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)';
+          let html = `<h3>${escapeHtml(response.firstName || '')} ${escapeHtml(response.lastName || '')} - ${escapeHtml(response.testName || '')}</h3>`;
+          html += `<form style="display:grid;gap:8px" id="form-${idx}">`;
+          const fields = ['email','firstName','lastName','grade','testType','subject','teacherName','testName','testDate','period'];
+          fields.forEach(field => {
+            const val = response[field] || '';
+            html += `<div><label style="font-weight:600">${field}</label><input type="text" name="${field}" value="${escapeHtml(String(val))}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px" /></div>`;
+          });
+          // teacher email row (auto-filled)
+          const autoEmail = (() => {
+            const name = response.teacherName || '';
+            if (!name) return '';
+            // simple last+firstinitial generation
+            const n = String(name).trim();
+            let last = '', first = '';
+            if (n.includes(',')) { const parts = n.split(',').map(p=>p.trim()); last = parts[0]; first = parts[1] || ''; }
+            else if (n.includes(' ')) { const parts = n.split(/\s+/); first = parts[0]; last = parts.slice(1).join(' '); }
+            else last = n;
+            const initial = first ? first.charAt(0).toLowerCase() : '';
+            return (last.toLowerCase() + initial + '@dlshs.org');
+          })();
+          html += `<div><label style="font-weight:600">Teacher Email</label><input type="email" name="teacherEmail" id="teacherEmail-${idx}" value="${escapeHtml(autoEmail)}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px" /></div>`;
+          html += `<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="copy-btn" data-idx="${idx}" style="background:#0366d6;color:white;padding:10px;border:none;border-radius:4px;cursor:pointer">Copy Email</button><button type="button" class="mark-sent-btn" data-idx="${idx}" style="background:#6f42c1;color:white;padding:10px;border:none;border-radius:4px;cursor:pointer">Mark As Sent</button></div>`;
+          html += `</form>`;
+          card.innerHTML = html;
+          el.appendChild(card);
+
+          // Copy email button: build a plain-text email body and copy to clipboard (for admin to paste into their mail client)
+          card.querySelector('.copy-btn').addEventListener('click', async () => {
+            const form = card.querySelector(`#form-${idx}`);
+            const formData = new FormData(form);
+            const updatedResponse = Object.fromEntries(formData);
+
+            const lines = [];
+            lines.push('Test Request Notification');
+            lines.push('========================');
+            for (const k of Object.keys(updatedResponse)) {
+              lines.push(`${k}: ${updatedResponse[k]}`);
+            }
+            const emailText = lines.join('\n');
+
+            try {
+              await navigator.clipboard.writeText(emailText);
+              showToast('Email body copied to clipboard — paste into your mail client to send.');
+            } catch (err) {
+              // fallback to prompt (modal) when clipboard API isn't available
+              window.prompt('Copy the email text below (Cmd+C):', emailText);
+            }
+          });
+
+          // Mark-as-sent button: mark the response as sent without sending an email
+          card.querySelector('.mark-sent-btn').addEventListener('click', async () => {
+            try {
+              const resp = await fetch('/api/admin/mark-sent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ responseId: idx })
+              });
+              if (!resp.ok) {
+                const txt = await resp.text();
+                console.error('mark-sent failed', resp.status, txt);
+                alert('Failed to mark as sent');
+                return;
+              }
+              alert('Marked as sent');
+              card.remove();
+            } catch (err) {
+              console.error(err);
+              alert('Error marking as sent');
+            }
+          });
+        });
+      }
+
       loadLogs();
       loadResponses();
+      loadNotifications();
     </script>
   </body>
 </html>
