@@ -381,7 +381,8 @@
           try {
             const res = await fetch('/api/admin/clear-logs', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
             });
             if (res.ok) {
               showToast('Logs cleared successfully');
@@ -402,7 +403,8 @@
           try {
             const res = await fetch('/api/admin/clear-responses', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include'
             });
             if (res.ok) {
               showToast('Responses cleared successfully');
@@ -437,7 +439,7 @@
 
       async function loadLogs() {
         try {
-          const res = await fetch('/api/admin/logs');
+          const res = await fetch('/api/admin/logs', { credentials: 'include' });
           const logs = await res.json();
           renderTable('logsContent', logs);
         } catch (err) {
@@ -540,6 +542,7 @@
 
         try {
           const res = await fetch('/api/admin/upload-students', {
+            credentials: 'include',
             method: 'POST',
             body: formData
           });
@@ -572,6 +575,7 @@
           const res = await fetch('/api/admin/teachers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ name, email })
           });
           if (res.ok) {
@@ -591,7 +595,7 @@
 
       async function loadResponses() {
         try {
-          const res = await fetch('/api/admin/responses');
+          const res = await fetch('/api/admin/responses', { credentials: 'include' });
           const responses = await res.json();
           renderTable('responsesContent', responses);
         } catch (err) {
@@ -650,7 +654,7 @@
 
       async function loadNotifications() {
         try {
-          const res = await fetch('/api/admin/unsent-responses');
+          const res = await fetch('/api/admin/unsent-responses', { credentials: 'include' });
           const unsent = await res.json();
           renderNotifications('notificationsContent', unsent);
         } catch (err) {

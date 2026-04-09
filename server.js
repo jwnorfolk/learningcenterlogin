@@ -483,17 +483,6 @@ app.post('/api/admin-logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Route to serve admin.html only if authenticated
-app.get('/admin.html', (req, res) => {
-  const sessionId = req.cookies && req.cookies.adminSession;
-  if (sessionId && sessionStore[sessionId]) {
-    sessionStore[sessionId].lastAccess = Date.now();
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-  } else {
-    res.status(401).send('Unauthorized. Please login first.');
-  }
-});
-
 // API: get all logs
 app.get('/api/admin/logs', isAdminAuthenticated, (req, res) => {
   try {
