@@ -12,39 +12,89 @@
         font-family: system-ui, Arial;
         margin: 0;
         padding: 18px;
-        background: #f6f8fa;
+        background: #ffffff;
+        min-height: 100vh;
+        color: #333;
       }
       .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
+        padding: 20px;
+        background: linear-gradient(90deg, #0f3e1f, #1a5c31);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(15, 62, 31, 0.15);
       }
       .header h1 {
         margin: 0;
+        color: #fff;
+        font-size: 28px;
+        font-weight: 600;
       }
       .header a {
-        color: #0366d6;
+        color: #fff;
         text-decoration: none;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s;
+        font-weight: 500;
+      }
+      .header a:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+      }
+      .header .buttons {
+        display: flex;
+        gap: 12px;
+      }
+      .header button {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+      }
+      .header .clear-btn {
+        background: #dc3545;
+        color: #fff;
+      }
+      .header .clear-btn:hover {
+        background: #c82333;
+        transform: translateY(-1px);
       }
       .tabs {
         display: flex;
         gap: 8px;
-        margin-bottom: 18px;
-        border-bottom: 1px solid #ddd;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e9ecef;
+        background: #f8f9fa;
+        padding: 0 20px;
+        border-radius: 8px 8px 0 0;
       }
       .tab {
-        padding: 12px 16px;
+        padding: 16px 24px;
         background: none;
         border: none;
         cursor: pointer;
         font-size: 16px;
         border-bottom: 3px solid transparent;
-        color: #666;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s;
+        position: relative;
       }
       .tab.active {
-        color: #0366d6;
-        border-bottom-color: #0366d6;
+        color: #0f3e1f;
+        border-bottom-color: #0f3e1f;
+        background: rgba(15, 62, 31, 0.05);
+      }
+      .tab:hover {
+        color: #0f3e1f;
+        background: rgba(15, 62, 31, 0.05);
       }
       .tab-content {
         display: none;
@@ -53,69 +103,240 @@
         display: block;
       }
       .data-table {
-        background: white;
-        border-radius: 8px;
+        background: #fff;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
       }
       table {
         width: 100%;
         border-collapse: collapse;
       }
       th {
-        background: #f6f8fa;
-        padding: 12px;
+        background: linear-gradient(90deg, #0f3e1f, #1a5c31);
+        color: #fff;
+        padding: 16px;
         text-align: left;
         font-weight: 600;
-        border-bottom: 2px solid #ddd;
-        font-size: 13px;
-        color: #333;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       td {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
-        font-size: 13px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        font-size: 14px;
+        color: #495057;
       }
       tr:hover {
-        background: #f9f9f9;
+        background: #f8f9fa;
       }
       .loading {
-        padding: 24px;
+        padding: 40px;
         text-align: center;
-        color: #666;
+        color: #6c757d;
+        font-size: 16px;
       }
       .error {
         padding: 24px;
-        color: #d73a49;
-        background: #ffeef0;
-        border-radius: 4px;
+        color: #dc3545;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        margin: 20px;
+      }
+      .upload-section {
+        background: #fff;
+        padding: 32px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 24px;
+      }
+      .upload-section h3 {
+        margin: 0 0 20px 0;
+        color: #0f3e1f;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .upload-section p {
+        color: #6c757d;
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+      .upload-section input[type="file"] {
+        margin-bottom: 16px;
+        padding: 12px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        background: #f8f9fa;
+        width: 100%;
+        transition: all 0.3s;
+      }
+      .upload-section input[type="file"]:hover {
+        border-color: #0f3e1f;
+        background: rgba(15, 62, 31, 0.02);
+      }
+      .upload-section button {
+        background: linear-gradient(90deg, #0f3e1f, #1a5c31);
+        color: #fff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(15, 62, 31, 0.2);
+      }
+      .upload-section button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15, 62, 31, 0.3);
+      }
+      .secondary-btn {
+        margin-right: 10px;
+        padding: 8px 14px;
+        background: #f8f9fa;
+        color: #0f3e1f;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+      .secondary-btn:hover {
+        background: #e9ecef;
+      }
+      .danger-btn {
+        padding: 8px 14px;
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+      }
+      .danger-btn:hover {
+        background: #c82333;
+      }
+      .clear-section {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+      .clear-section h3 {
+        margin: 0 0 16px 0;
+        color: #0f3e1f;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .clear-section .buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .clear-section button {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+      }
+      .clear-section button:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
       }
     </style>
   </head>
   <body>
     <div class="header">
       <h1>Admin Dashboard</h1>
-      <div style="display:flex;gap:12px;align-items:center">
-        <button id="addStudentBtn" style="padding:8px 12px;border-radius:6px;border:1px solid #0366d6;background:#0366d6;color:#fff;cursor:pointer">Add Student</button>
+      <div class="buttons">
+        <button id="clearLogsBtn" class="clear-btn">Clear Logs</button>
+        <button id="clearResponsesBtn" class="clear-btn">Clear Responses</button>
         <a href="/">← Back to Home</a>
       </div>
     </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="logs">Logs</button>
+      <button class="tab" data-tab="students">Students</button>
+      <button class="tab" data-tab="teachers">Teachers</button>
       <button class="tab" data-tab="responses">Test Responses</button>
       <button class="tab" data-tab="notifications">Email Notifications</button>
     </div>
 
     <!-- Logs Tab -->
     <div id="logs" class="tab-content active">
+      <div class="clear-section">
+        <h3>Data Management</h3>
+        <div class="buttons">
+          <button id="clearLogsBtnTab">Clear All Logs</button>
+        </div>
+      </div>
       <div class="data-table">
         <div id="logsContent" class="loading">Loading logs...</div>
       </div>
     </div>
 
+    <!-- Students Tab -->
+    <div id="students" class="tab-content">
+      <div class="upload-section">
+        <h3>Upload Students File</h3>
+        <p>Upload a new students.xlsx file to replace the current student list. This will completely replace all existing student data.</p>
+        <form id="uploadStudentsForm" enctype="multipart/form-data">
+          <input type="file" name="studentsFile" accept=".xlsx" required>
+          <button type="submit">Upload & Replace Students</button>
+        </form>
+      </div>
+      <div class="upload-section">
+        <h3>Add Individual Student</h3>
+        <button id="addStudentBtn" style="padding:10px 16px;border-radius:8px;border:1px solid #0f3e1f;background:linear-gradient(90deg, #0f3e1f, #1a5c31);color:#fff;cursor:pointer;font-weight:500;">Add Student</button>
+      </div>
+      <div class="data-table">
+        <div id="studentsContent" class="loading">Loading students...</div>
+      </div>
+    </div>
+
+    <!-- Teachers Tab -->
+    <div id="teachers" class="tab-content">
+      <div class="upload-section">
+        <h3>Teacher Management</h3>
+        <p>Create, edit, and delete teachers directly here. Changes are saved immediately to the teacher list.</p>
+        <form id="addTeacherForm">
+          <label style="display:flex;flex-direction:column;gap:8px;line-height:1.4">
+            New Teacher Name
+            <input type="text" name="name" placeholder="Last, First" required style="padding:12px;border-radius:8px;border:1px solid #e9ecef;background:#f8f9fa;color:#333" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px;line-height:1.4;margin-top:12px">
+            Teacher Email (optional)
+            <input type="email" name="email" placeholder="lastnamefirstinitial@dlshs.org" style="padding:12px;border-radius:8px;border:1px solid #e9ecef;background:#f8f9fa;color:#333" />
+          </label>
+          <button type="submit">Add Teacher</button>
+        </form>
+      </div>
+      <div class="data-table">
+        <div id="teachersContent" class="loading">Loading teachers...</div>
+      </div>
+    </div>
+
     <!-- Responses Tab -->
     <div id="responses" class="tab-content">
+      <div class="clear-section">
+        <h3>Data Management</h3>
+        <div class="buttons">
+          <button id="clearResponsesBtnTab">Clear All Responses</button>
+        </div>
+      </div>
       <div class="data-table">
         <div id="responsesContent" class="loading">Loading responses...</div>
       </div>
@@ -135,6 +356,72 @@
         const top = Math.round((screen.height - h) / 2);
         window.open('/add-student-popup.html', 'AddStudent', `width=${w},height=${h},left=${left},top=${top}`);
       });
+
+      // Check authentication on page load
+      async function checkAuth() {
+        try {
+          const res = await fetch('/api/admin/logs');
+          if (res.status === 401) {
+            window.location.href = '/';
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      checkAuth();
+
+      // Clear logs button with confirmation
+      const clearLogsBtn = document.getElementById('clearLogsBtn');
+      const clearLogsBtnTab = document.getElementById('clearLogsBtnTab');
+      const clearResponsesBtn = document.getElementById('clearResponsesBtn');
+      const clearResponsesBtnTab = document.getElementById('clearResponsesBtnTab');
+
+      const clearLogs = async () => {
+        if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+          try {
+            const res = await fetch('/api/admin/clear-logs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+              showToast('Logs cleared successfully');
+              loadLogs(); // Reload logs
+            } else {
+              const error = await res.json();
+              showToast('Failed to clear logs: ' + (error.error || 'Unknown error'));
+            }
+          } catch (err) {
+            console.error(err);
+            showToast('Error clearing logs');
+          }
+        }
+      };
+
+      const clearResponses = async () => {
+        if (confirm('Are you sure you want to clear all responses? This action cannot be undone.')) {
+          try {
+            const res = await fetch('/api/admin/clear-responses', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+              showToast('Responses cleared successfully');
+              loadResponses(); // Reload responses
+            } else {
+              const error = await res.json();
+              showToast('Failed to clear responses: ' + (error.error || 'Unknown error'));
+            }
+          } catch (err) {
+            console.error(err);
+            showToast('Error clearing responses');
+          }
+        }
+      };
+
+      clearLogsBtn.addEventListener('click', clearLogs);
+      clearLogsBtnTab.addEventListener('click', clearLogs);
+      clearResponsesBtn.addEventListener('click', clearResponses);
+      clearResponsesBtnTab.addEventListener('click', clearResponses);
 
       const tabs = document.querySelectorAll('.tab');
       const contents = document.querySelectorAll('.tab-content');
@@ -157,6 +444,150 @@
           document.getElementById('logsContent').innerHTML = '<div class="error">Failed to load logs</div>';
         }
       }
+
+      async function loadStudents() {
+        try {
+          const res = await fetch('/api/students');
+          const students = await res.json();
+          renderTable('studentsContent', students);
+        } catch (err) {
+          document.getElementById('studentsContent').innerHTML = '<div class="error">Failed to load students</div>';
+        }
+      }
+
+      async function loadTeachers() {
+        try {
+          const res = await fetch('/api/teachers');
+          const teachers = await res.json();
+          const el = document.getElementById('teachersContent');
+          if (!teachers || teachers.length === 0) {
+            el.innerHTML = '<div class="loading">No teachers found</div>';
+            return;
+          }
+          let html = '<table><thead><tr><th>Teacher Name</th><th>Email</th><th style="width:210px">Actions</th></tr></thead><tbody>';
+          teachers.forEach((teacher, index) => {
+            const name = typeof teacher === 'string' ? teacher : teacher.name;
+            const email = typeof teacher === 'string' ? '' : teacher.email || '';
+            html += `<tr><td>${escapeHtml(String(name))}</td><td>${escapeHtml(String(email))}</td><td><button class="secondary-btn edit-teacher-btn" data-index="${index}">Edit</button><button class="secondary-btn danger-btn delete-teacher-btn" data-index="${index}">Delete</button></td></tr>`;
+          });
+          html += '</tbody></table>';
+          el.innerHTML = html;
+
+          document.querySelectorAll('.edit-teacher-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+              const index = button.dataset.index;
+              const currentTeacher = teachers[index];
+              const currentName = typeof currentTeacher === 'string' ? currentTeacher : currentTeacher.name;
+              const currentEmail = typeof currentTeacher === 'string' ? '' : currentTeacher.email || '';
+              const newName = prompt('Edit teacher name:', currentName);
+              if (!newName || !newName.trim()) return;
+              const newEmail = prompt('Edit teacher email:', currentEmail).trim();
+              try {
+                const res = await fetch(`/api/admin/teachers/${index}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: newName.trim(), email: newEmail })
+                });
+                if (res.ok) {
+                  showToast('Teacher updated successfully');
+                  loadTeachers();
+                } else {
+                  const error = await res.json();
+                  showToast('Update failed: ' + (error.error || 'Unknown error'));
+                }
+              } catch (err) {
+                console.error(err);
+                showToast('Error updating teacher');
+              }
+            });
+          });
+
+          document.querySelectorAll('.delete-teacher-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+              const index = button.dataset.index;
+              if (!confirm('Delete this teacher? This action cannot be undone.')) return;
+              try {
+                const res = await fetch(`/api/admin/teachers/${index}`, {
+                  method: 'DELETE'
+                });
+                if (res.ok) {
+                  showToast('Teacher deleted successfully');
+                  loadTeachers();
+                } else {
+                  const error = await res.json();
+                  showToast('Delete failed: ' + (error.error || 'Unknown error'));
+                }
+              } catch (err) {
+                console.error(err);
+                showToast('Error deleting teacher');
+              }
+            });
+          });
+        } catch (err) {
+          document.getElementById('teachersContent').innerHTML = '<div class="error">Failed to load teachers</div>';
+        }
+      }
+
+      // Handle students file upload
+      const uploadStudentsForm = document.getElementById('uploadStudentsForm');
+      uploadStudentsForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(uploadStudentsForm);
+        
+        if (!confirm('Are you sure you want to replace the students file? This will completely replace all existing student data.')) {
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/admin/upload-students', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (res.ok) {
+            const result = await res.json();
+            showToast(result.message || 'Students file uploaded successfully');
+            uploadStudentsForm.reset();
+            loadStudents(); // Reload students table
+          } else {
+            const error = await res.json();
+            showToast('Upload failed: ' + (error.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error uploading file');
+        }
+      });
+
+      // Handle teacher creation
+      const addTeacherForm = document.getElementById('addTeacherForm');
+      addTeacherForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(addTeacherForm);
+        const name = formData.get('name').trim();
+        const email = String(formData.get('email') || '').trim();
+        if (!name) return;
+
+        try {
+          const res = await fetch('/api/admin/teachers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email })
+          });
+          if (res.ok) {
+            const result = await res.json();
+            showToast(result.message || 'Teacher added successfully');
+            addTeacherForm.reset();
+            loadTeachers();
+          } else {
+            const error = await res.json();
+            showToast('Add failed: ' + (error.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error adding teacher');
+        }
+      });
 
       async function loadResponses() {
         try {
@@ -312,6 +743,8 @@
       }
 
       loadLogs();
+      loadStudents();
+      loadTeachers();
       loadResponses();
       loadNotifications();
     </script>

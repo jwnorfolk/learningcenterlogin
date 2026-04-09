@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Add Student</title>
     <style>
-      body { font-family: system-ui, Arial; margin: 18px; }
-      .box { background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+      body { font-family: system-ui, Arial; margin: 18px; background: linear-gradient(90deg, #0f3e1f, #1a5c31); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+      .box { background:rgba(255,255,255,0.95);padding:16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);width:100%;max-width:400px }
       label { display:block;margin:8px 0;font-size:14px;color:#333 }
-      input, select { width:100%;padding:8px;border:1px solid #ddd;border-radius:4px }
-      button { margin-top:12px;padding:10px 14px;background:#0366d6;color:#fff;border:none;border-radius:6px;cursor:pointer }
+      input, select { width:100%;padding:8px;border:1px solid rgba(255,255,255,0.3);border-radius:4px;background:rgba(255,255,255,0.1);color:#333 }
+      button { margin-top:12px;padding:10px 14px;background:linear-gradient(90deg, #0f3e1f, #1a5c31);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity 0.3s }
+      button:hover { opacity: 0.9 }
+      h2 { margin-top:0; color: #0f3e1f }
     </style>
   </head>
   <body>

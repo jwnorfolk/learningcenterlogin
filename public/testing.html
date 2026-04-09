@@ -7,8 +7,11 @@
     <style>
       body {
         font-family: system-ui, Arial;
-        margin: 18px;
-        max-width: 600px;
+        margin: 24px;
+        max-width: 700px;
+        background: #ffffff;
+        min-height: 100vh;
+        color: #333;
       }
       .topright {
         position: fixed;
@@ -16,32 +19,51 @@
         top: 12px;
       }
       .note {
-        background: #fef3cd;
-        border: 1px solid #ffc107;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 18px;
-        font-weight: bold;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 28px;
+        font-weight: 500;
+        color: #856404;
+        border-left: 4px solid #ffc107;
+        font-size: 1.05rem;
       }
       .note p {
-        margin: 0 0 6px;
+        margin: 0 0 8px;
       }
       form div {
-        margin-bottom: 16px;
+        margin-bottom: 20px;
       }
       label {
         display: flex;
         flex-direction: column;
-        font-weight: 500;
-        margin-bottom: 6px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #333;
+        font-size: 1.05rem;
       }
       input,
       select,
       textarea {
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        padding: 16px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
         font-family: inherit;
+        background: #f8f9fa;
+        color: #333;
+        transition: border-color 0.3s;
+        font-size: 1rem;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #0f3e1f;
+        outline: none;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: #6c757d;
       }
       input[type="email"],
       input[type="text"],
@@ -53,32 +75,58 @@
       }
       .required::after {
         content: " *";
-        color: red;
+        color: #ff6b6b;
       }
       button {
-        padding: 10px 20px;
-        background: #0366d6;
+        padding: 16px 32px;
+        background: linear-gradient(90deg, #0f3e1f, #1a5c31);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 18px;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(15, 62, 31, 0.2);
       }
       button:hover {
-        background: #0256c7;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(15, 62, 31, 0.3);
       }
       .back-link {
-        margin-bottom: 18px;
+        margin-bottom: 28px;
+      }
+      .back-link a {
+        color: #0f3e1f;
+        text-decoration: none;
+        background: #f8f9fa;
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        font-weight: 600;
+        font-size: 1.05rem;
+        transition: all 0.3s;
+      }
+      .back-link a:hover {
+        background: #0f3e1f;
+        color: #fff;
+        transform: translateY(-1px);
       }
       .section-title {
-        font-size: 14px;
-        font-weight: bold;
-        color: #333;
-        margin-top: 12px;
-        margin-bottom: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f3e1f;
+        margin-top: 20px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        color: #0f3e1f;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 28px;
       }
       .section-note {
-        font-size: 13px;
+        font-size: 14px;
         color: #666;
         margin-bottom: 8px;
       }
@@ -240,11 +288,11 @@
           const teachers = await res.json();
           const select = document.getElementById('teacherSelect');
           // remove any existing options besides the placeholder and OTHER
-          const otherOption = Array.from(select.options).find(o => o.value === 'OTHER');
           select.innerHTML = '';
           select.appendChild(new Option('-- Select --',''));
-          // insert teacher names (skip blanks) between rows 4..142 as returned
-          teachers.forEach(name => {
+          // insert teacher names (skip blanks) from the teacher records
+          teachers.forEach(teacher => {
+            const name = typeof teacher === 'string' ? teacher : teacher.name;
             const trimmed = (name || '').toString().trim();
             if (!trimmed) return;
             select.appendChild(new Option(trimmed, trimmed));
