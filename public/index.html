@@ -14,8 +14,8 @@
       .topright:hover{transform:translateY(-1px);background:rgba(255,255,255,0.22);box-shadow:0 10px 24px rgba(15, 62, 31, 0.18)}
       .hero-text{max-width:560px;}
       .hero-text p{margin:20px 0 0;font-size:1.3rem;line-height:1.8;color:rgba(255,255,255,0.9)}
-      .options{display:flex;flex-direction:column;gap:24px;align-items:center;justify-content:center;padding:48px 24px 64px;max-width:900px;width:100%;box-sizing:border-box;}
-      .card{width:min(100%,380px);min-height:200px;padding:40px 48px;border-radius:18px;cursor:pointer;background:linear-gradient(180deg, #eef8ee 0%, #ffffff 100%);color:var(--green-dark);text-align:center;font-size:1.65rem;font-weight:700;letter-spacing:0.01em;box-shadow:0 10px 30px rgba(26,92,49,0.08);border:1px solid rgba(26,92,49,0.12);transition:all 0.25s;display:flex;align-items:center;justify-content:center;}
+      .options{display:flex;flex-direction:column;gap:24px;align-items:stretch;justify-content:center;padding:24px;width:100%;box-sizing:border-box;flex:1;}
+      .card{width:100%;flex:1;min-height:200px;padding:40px 48px;border-radius:18px;cursor:pointer;background:linear-gradient(180deg, #eef8ee 0%, #ffffff 100%);color:var(--green-dark);text-align:center;font-size:1.65rem;font-weight:700;letter-spacing:0.01em;box-shadow:0 10px 30px rgba(26,92,49,0.08);border:1px solid rgba(26,92,49,0.12);transition:all 0.25s;display:flex;align-items:center;justify-content:center;}
       .card:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(26,92,49,0.14);border-color:rgba(26,92,49,0.18)}
       .card.primary{background:linear-gradient(90deg, #1a5c31, #20803c);color:#fff;}
       .card.primary:hover{background:linear-gradient(90deg, #0f3e1f, #1a5c31);}
@@ -36,7 +36,7 @@
       .modal-box .cancel-btn:hover{background:#5a6268}
       h1{color:#fff;font-size:2rem;margin:0}
       .underline{width:64px;height:4px;background:#fff;border-radius:999px;margin:24px auto 0;}
-      @media (min-width:640px) {.options{flex-direction:row;}}
+      @media (min-width:640px) {.options{flex-direction:row;padding:48px 24px 64px;}.card{width:auto;flex:1;min-height:auto;}}
     </style>
   </head>
   <body>
