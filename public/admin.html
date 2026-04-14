@@ -271,7 +271,8 @@
       <button class="tab active" data-tab="logs">Logs</button>
       <button class="tab" data-tab="students">Students</button>
       <button class="tab" data-tab="teachers">Teachers</button>
-      <button class="tab" data-tab="responses">Test Responses</button>
+      <button class="tab" data-tab="responses">Test Signups</button>
+      <button class="tab" data-tab="test-logins">Test Logins</button>
       <button class="tab" data-tab="notifications">Email Notifications</button>
     </div>
 
@@ -339,6 +340,19 @@
       </div>
       <div class="data-table">
         <div id="responsesContent" class="loading">Loading responses...</div>
+      </div>
+    </div>
+
+    <!-- Test Logins Tab -->
+    <div id="test-logins" class="tab-content">
+      <div class="clear-section">
+        <h3>Data Management</h3>
+        <div class="buttons">
+          <button id="clearTestLoginsBtnTab">Clear All Test Logins</button>
+        </div>
+      </div>
+      <div class="data-table">
+        <div id="testLoginsContent" class="loading">Loading test logins...</div>
       </div>
     </div>
 
@@ -433,7 +447,14 @@
           tabs.forEach(t => t.classList.remove('active'));
           contents.forEach(c => c.classList.remove('active'));
           tab.classList.add('active');
-          document.getElementById(tab.dataset.tab).classList.add('active');
+          const contentId = tab.dataset.tab;
+          document.getElementById(contentId).classList.add('active');
+          if (contentId === 'logs' && !window.allLogs) loadLogs();
+          if (contentId === 'students') loadStudents();
+          if (contentId === 'teachers') loadTeachers();
+          if (contentId === 'responses') loadResponses();
+          if (contentId === 'test-logins') loadTestLogins();
+          if (contentId === 'notifications') loadNotifications();
         });
       });
 
@@ -591,6 +612,25 @@
           console.error(err);
           showToast('Error adding teacher');
         }
+      });
+
+      async function loadTestLogins() {
+        try {
+          const res = await fetch('/api/admin/test-logins', { credentials: 'include' });
+          const logins = await res.json();
+          renderTable('testLoginsContent', logins);
+        } catch (err) {
+          document.getElementById('testLoginsContent').innerHTML = '<div class="error">Failed to load test logins</div>';
+        }
+      }
+
+      document.getElementById('clearTestLoginsBtnTab').addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear all test logins? This cannot be undone.')) return;
+        try {
+          const res = await fetch('/api/admin/clear-test-logins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
+          if (res.ok) { showToast('Test logins cleared'); loadTestLogins(); }
+          else { const e = await res.json(); showToast('Failed: ' + (e.error || 'Unknown error')); }
+        } catch (err) { showToast('Error clearing test logins'); }
       });
 
       async function loadResponses() {

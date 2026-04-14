@@ -25,8 +25,40 @@
     <input id="search" placeholder="Search students by name or id..." />
     <div id="list">Loading…</div>
 
+    <!-- Subject modal (shown only when logging IN) -->
+    <div id="subjectModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:36px;border-radius:14px;box-shadow:0 18px 42px rgba(0,0,0,0.18);min-width:320px;max-width:460px;width:90%;border:1px solid #e8eceb;">
+        <h2 style="margin-top:0;color:#0f3e1f;font-size:1.5rem;font-weight:700;">What subject are you working on?</h2>
+        <p id="subjectStudentName" style="margin:0 0 20px;color:#555;font-size:1.05rem;"></p>
+        <div id="subjectButtons" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;"></div>
+        <button id="subjectCancelBtn" style="width:100%;padding:14px;background:#6c757d;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+
     <script>
+      const SUBJECTS = ['Math', 'English', 'Social Studies', 'Foreign Language', 'Science', 'Religion', 'Other'];
+
       let students = [];
+      let pendingStudent = null;
+
+      const subjectModal = document.getElementById('subjectModal');
+
+      // Build subject buttons once
+      SUBJECTS.forEach(subj => {
+        const btn = document.createElement('button');
+        btn.textContent = subj;
+        btn.style.cssText = 'padding:16px 10px;background:linear-gradient(90deg,#1a5c31,#20803c);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;';
+        btn.addEventListener('click', () => {
+          subjectModal.style.display = 'none';
+          if (pendingStudent) { doToggle(pendingStudent.firstName, pendingStudent.lastName, subj); pendingStudent = null; }
+        });
+        document.getElementById('subjectButtons').appendChild(btn);
+      });
+
+      document.getElementById('subjectCancelBtn').addEventListener('click', () => {
+        subjectModal.style.display = 'none';
+        pendingStudent = null;
+      });
 
       async function loadStudents(){
         try {
@@ -42,11 +74,9 @@
         const el = document.getElementById('list');
         if (!arr.length) { el.innerHTML = '<p>No students</p>'; return }
         el.innerHTML = '';
-        // Sort: logged-in students first, then by last name
         const sorted = [...arr].sort((a, b) => {
           if (a.loggedIn && !b.loggedIn) return -1;
           if (!a.loggedIn && b.loggedIn) return 1;
-          // fallback to lastName then firstName
           const ln = (a.lastName || '').localeCompare(b.lastName || '');
           if (ln !== 0) return ln;
           return (a.firstName || '').localeCompare(b.firstName || '');
@@ -56,7 +86,15 @@
           const item = document.createElement('div');
           item.className = 'student' + (s.loggedIn ? ' logged' : '');
           item.innerHTML = `<div>${s.firstName} ${s.lastName} (Grade ${s.grade})</div><div>${s.loggedIn ? 'LOGGED IN' : ''}</div>`;
-          item.addEventListener('click', () => toggleStudentAndReturnHome(s.firstName, s.lastName));
+          item.addEventListener('click', () => {
+            if (s.loggedIn) {
+              doToggle(s.firstName, s.lastName, null); // logging out — no subject needed
+            } else {
+              pendingStudent = s;
+              document.getElementById('subjectStudentName').textContent = `${s.firstName} ${s.lastName} (Grade ${s.grade})`;
+              subjectModal.style.display = 'flex';
+            }
+          });
           el.appendChild(item);
         });
       }
@@ -71,16 +109,16 @@
         renderList(filterList(e.target.value));
       });
 
-      // When toggling a student, redirect to the homepage immediately after success
-      async function toggleStudentAndReturnHome(firstName, lastName){
+      async function doToggle(firstName, lastName, subject) {
         try {
+          const body = { firstName, lastName };
+          if (subject) body.subject = subject;
           const res = await fetch('/api/toggle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ firstName, lastName })
+            body: JSON.stringify(body)
           });
-          if (!res.ok) { alert('Failed to toggle student'); return }
-          // On success, go back to home as requested
+          if (!res.ok) { alert('Failed to toggle student'); return; }
           window.location.href = '/';
         } catch (err) {
           alert('Failed to toggle student');

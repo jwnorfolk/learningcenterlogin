@@ -46,6 +46,7 @@ function generateSessionId() {
 const DATA_DIR = path.join(__dirname, 'data');
 const STUDENTS_XLSX = path.join(DATA_DIR, 'students.xlsx');
 const LOGS_XLSX = path.join(DATA_DIR, 'logs.xlsx');
+const TEST_LOGINS_XLSX = path.join(DATA_DIR, 'test-logins.xlsx');
 
 // Configure multer for file uploads
 const upload = multer({ dest: path.join(__dirname, 'temp') });
@@ -164,6 +165,22 @@ function appendResponseToFile(response) {
   };
   responses.push(newRow);
   writeResponsesFile(responses);
+}
+
+function readTestLogins() {
+  if (!fs.existsSync(TEST_LOGINS_XLSX)) return [];
+  const wb = XLSX.readFile(TEST_LOGINS_XLSX);
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws, { defval: '' });
+}
+
+const TEST_LOGIN_HEADERS = ['timestamp', 'lastName', 'firstName', 'testType', 'grade', 'teacher', 'otherTeacher', 'subject', 'testDate', 'honorCodeAgreed', 'timeIn'];
+
+function writeTestLoginsFile(logins) {
+  const ws = XLSX.utils.json_to_sheet(logins, { header: TEST_LOGIN_HEADERS });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'test-logins');
+  XLSX.writeFile(wb, TEST_LOGINS_XLSX);
 }
 
 // Note: .xlsx files are expected to exist; server does not auto-generate them.
@@ -362,7 +379,7 @@ app.delete('/api/admin/teachers/:index', isAdminAuthenticated, (req, res) => {
 // API: toggle login state for a student by name (no id required)
 app.post('/api/toggle', (req, res) => {
   try {
-    const { firstName, lastName } = req.body || {};
+    const { firstName, lastName, subject } = req.body || {};
     if (!firstName || !lastName) return res.status(400).json({ error: 'firstName and lastName required' });
 
     const students = readStudents();
@@ -378,13 +395,71 @@ app.post('/api/toggle', (req, res) => {
     // Append to logs
     const logs = readLogs();
     const action = student.loggedIn ? 'login' : 'logout';
-    logs.push({ timestamp: new Date().toISOString(), firstName: student.firstName, lastName: student.lastName, grade: student.grade, action });
+    const logEntry = { timestamp: new Date().toISOString(), firstName: student.firstName, lastName: student.lastName, grade: student.grade, action };
+    if (action === 'login' && subject) logEntry.subject = String(subject);
+    logs.push(logEntry);
     writeLogsFile(logs);
 
     res.json(student);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to toggle student' });
+  }
+});
+
+// API: submit test login (student checking in for a test)
+app.post('/api/submit-test-login', (req, res) => {
+  try {
+    const b = req.body || {};
+    const now = new Date();
+    const timeIn = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const testDate = now.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const entry = {
+      timestamp: now.toISOString(),
+      lastName: b.lastName || '',
+      firstName: b.firstName || '',
+      testType: b.testType || '',
+      grade: b.grade || '',
+      teacher: b.teacher || '',
+      otherTeacher: b.otherTeacher || '',
+      subject: b.subject || '',
+      testDate,
+      honorCodeAgreed: (b.honorCodeAgreed === true || b.honorCodeAgreed === 'true'),
+      timeIn,
+    };
+    const logins = readTestLogins();
+    logins.push(entry);
+    writeTestLoginsFile(logins);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save test login' });
+  }
+});
+
+// API: get all test logins (admin only)
+app.get('/api/admin/test-logins', isAdminAuthenticated, (_req, res) => {
+  try {
+    const logins = readTestLogins();
+    logins.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+    res.json(logins);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch test logins' });
+  }
+});
+
+// API: clear all test logins (admin only)
+app.post('/api/admin/clear-test-logins', isAdminAuthenticated, (_req, res) => {
+  try {
+    const ws = XLSX.utils.aoa_to_sheet([TEST_LOGIN_HEADERS]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'test-logins');
+    XLSX.writeFile(wb, TEST_LOGINS_XLSX);
+    res.json({ success: true, message: 'Test logins cleared successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to clear test logins' });
   }
 });
 
@@ -742,6 +817,51 @@ app.post('/api/admin/clear-responses', isAdminAuthenticated, (req, res) => {
   }
 });
 
+// Auto-logout: force out any student logged in since a previous calendar day
+function autoLogoutStaleStudents() {
+  try {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const students = readStudents();
+    const loggedIn = students.filter(s => s.loggedIn);
+    if (loggedIn.length === 0) return;
+
+    const logs = readLogs();
+    const lastLogin = {};
+    for (const entry of logs) {
+      if (String(entry.action || '').toLowerCase() === 'login') {
+        const key = `${entry.firstName}|${entry.lastName}`;
+        if (!lastLogin[key] || entry.timestamp > lastLogin[key]) {
+          lastLogin[key] = entry.timestamp;
+        }
+      }
+    }
+
+    const stale = loggedIn.filter(s => {
+      const ts = lastLogin[`${s.firstName}|${s.lastName}`];
+      if (!ts) return true; // no login record — treat as stale
+      return String(ts).slice(0, 10) < todayStr;
+    });
+
+    if (stale.length === 0) return;
+
+    console.log(`[auto-logout] Logging out ${stale.length} student(s) from a previous day`);
+    const staleKeys = new Set(stale.map(s => `${s.firstName}|${s.lastName}`));
+    for (const s of students) {
+      if (staleKeys.has(`${s.firstName}|${s.lastName}`)) s.loggedIn = false;
+    }
+    writeStudentsFile(students);
+
+    const now = new Date().toISOString();
+    for (const s of stale) {
+      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, action: 'auto-logout' });
+      console.log(`[auto-logout] ${s.firstName} ${s.lastName}`);
+    }
+    writeLogsFile(logs);
+  } catch (err) {
+    console.error('[auto-logout] Error:', err);
+  }
+}
+
 // Schedule daily cleanup of old logs (runs once per day)
 function scheduleDailyCleanup() {
   // Run cleanup once on startup
@@ -759,4 +879,6 @@ function scheduleDailyCleanup() {
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
   scheduleDailyCleanup();
+  autoLogoutStaleStudents();
+  setInterval(autoLogoutStaleStudents, 60 * 60 * 1000); // check every hour
 });
