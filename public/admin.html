@@ -358,7 +358,12 @@
 
     <!-- Email Notifications Tab -->
     <div id="notifications" class="tab-content">
-      <div id="notificationsContent" class="loading">Loading unsent responses...</div>
+      <div style="margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <label for="notifDatePicker" style="font-weight:600;font-size:15px">Select Date:</label>
+        <input type="date" id="notifDatePicker" style="padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px" />
+        <button id="notifLoadBtn" style="background:#0366d6;color:white;padding:7px 16px;border:none;border-radius:6px;font-size:14px;cursor:pointer">Load</button>
+      </div>
+      <div id="notificationsContent"></div>
     </div>
 
     <script>
@@ -692,98 +697,259 @@
         }, timeout);
       }
 
+      // Wire up date-picker load button
+      document.getElementById('notifLoadBtn').addEventListener('click', loadNotifications);
+      document.getElementById('notifDatePicker').addEventListener('keydown', (e) => { if (e.key === 'Enter') loadNotifications(); });
+
       async function loadNotifications() {
+        const dateVal = document.getElementById('notifDatePicker').value;
+        const el = document.getElementById('notificationsContent');
+        if (!dateVal) { el.innerHTML = '<div class="loading">Please select a date above.</div>'; return; }
+        el.innerHTML = '<div class="loading">Loading...</div>';
         try {
-          const res = await fetch('/api/admin/unsent-responses', { credentials: 'include' });
-          const unsent = await res.json();
-          renderNotifications('notificationsContent', unsent);
+          const res = await fetch('/api/admin/responses', { credentials: 'include' });
+          const all = await res.json();
+          // Filter to selected date — compare only date portion of testDate
+          const filtered = all.filter(r => {
+            const td = String(r.testDate || '').trim();
+            // testDate may be stored as "YYYY-MM-DD" or "M/D/YYYY" etc.; normalize both to YYYY-MM-DD for comparison
+            if (!td) return false;
+            // Try ISO first
+            if (/^\d{4}-\d{2}-\d{2}/.test(td)) return td.startsWith(dateVal);
+            // Try M/D/YYYY or MM/DD/YYYY
+            const slash = td.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (slash) {
+              const normalized = `${slash[3]}-${String(slash[1]).padStart(2,'0')}-${String(slash[2]).padStart(2,'0')}`;
+              return normalized === dateVal;
+            }
+            return false;
+          });
+          renderNotificationsByType(el, filtered, dateVal);
         } catch (err) {
-          document.getElementById('notificationsContent').innerHTML = '<div class="error">Failed to load unsent responses</div>';
+          el.innerHTML = '<div class="error">Failed to load responses</div>';
         }
       }
 
-      function renderNotifications(elementId, data) {
-        const el = document.getElementById(elementId);
+      const TEST_TYPE_CONFIG = [
+        { key: 'extended-time',      label: 'Extended Time' },
+        { key: 'makeup-after-school', label: 'Make Up (After School)' },
+        { key: 'finals-extended',    label: 'Finals (Extended Time)' },
+      ];
+
+      function formatDateDisplay(dateVal) {
+        // dateVal is YYYY-MM-DD; show as Month Day, Year
+        const [y, m, d] = dateVal.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      }
+
+      function renderNotificationsByType(el, data, dateVal) {
         if (!data || data.length === 0) {
-          el.innerHTML = '<div class="loading">No unsent responses</div>';
+          el.innerHTML = `<div class="loading">No test responses found for ${escapeHtml(dateVal)}.</div>`;
           return;
         }
-        el.innerHTML = '';
-        data.forEach((response) => {
-          const idx = response.__index;
-          const card = document.createElement('div');
-          card.style.cssText = 'background:white;padding:16px;margin-bottom:16px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08)';
-          let html = `<h3>${escapeHtml(response.firstName || '')} ${escapeHtml(response.lastName || '')} - ${escapeHtml(response.testName || '')}</h3>`;
-          html += `<form style="display:grid;gap:8px" id="form-${idx}">`;
-          const fields = ['email','firstName','lastName','grade','testType','subject','teacherName','testName','testDate','period'];
-          fields.forEach(field => {
-            const val = response[field] || '';
-            html += `<div><label style="font-weight:600">${field}</label><input type="text" name="${field}" value="${escapeHtml(String(val))}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px" /></div>`;
+
+        let html = `<h2 style="margin:0 0 18px;font-size:17px;color:#333">${escapeHtml(formatDateDisplay(dateVal))}</h2>`;
+
+        TEST_TYPE_CONFIG.forEach(({ key, label }) => {
+          const group = data.filter(r => String(r.testType || '').trim().toLowerCase() === key);
+          html += `<div style="background:white;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);margin-bottom:20px;overflow:hidden">`;
+          html += `<div style="background:#f0f4f8;padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #dde3ea">`;
+          html += `<h3 style="margin:0;font-size:15px;color:#1a1a2e;flex:1;min-width:120px">${escapeHtml(label)}</h3>`;
+          if (group.length > 0) {
+            const btnBase = 'border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;padding:6px 13px;';
+            html += `<button class="copy-to-btn"      data-type="${escapeHtml(key)}" style="${btnBase}background:#e8f0fe;color:#1a56db;">Copy To:</button>`;
+            html += `<button class="copy-subject-btn" data-type="${escapeHtml(key)}" style="${btnBase}background:#e6f4ea;color:#1a7340;">Copy Subject</button>`;
+            html += `<button class="copy-body-btn"    data-type="${escapeHtml(key)}" style="${btnBase}background:#0366d6;color:white;">Copy Body</button>`;
+          }
+          html += `</div>`;
+
+          if (group.length === 0) {
+            html += `<div style="padding:14px 16px;color:#888;font-size:13px">No students scheduled</div>`;
+          } else {
+            html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">`;
+            html += `<thead><tr style="background:#fafbfc;border-bottom:1px solid #e1e4e8">`;
+            ['Last', 'First', 'Teacher', 'Test Name', 'Grade', 'Date', 'Type', 'Period'].forEach(col => {
+              html += `<th style="padding:8px 12px;text-align:left;font-weight:600;color:#555;white-space:nowrap">${col}</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+            group.forEach((r, i) => {
+              const bg = i % 2 === 0 ? '#fff' : '#f9f9f9';
+              html += `<tr style="background:${bg};border-bottom:1px solid #f0f0f0">`;
+              html += `<td style="padding:8px 12px">${escapeHtml(String(r.lastName  || ''))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(String(r.firstName || ''))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(toLastFirst(r.teacherName))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(String(r.testName  || ''))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(String(r.grade     || ''))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(toSlashDate(r.testDate))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(emailTypeString(key))}</td>`;
+              html += `<td style="padding:8px 12px">${escapeHtml(ordinal(r.period))}</td>`;
+              html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+          }
+          html += `</div>`;
+        });
+
+        el.innerHTML = html;
+
+        // ── Copy To: ──────────────────────────────────────────────────────
+        el.querySelectorAll('.copy-to-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const key = btn.dataset.type;
+            const group = data.filter(r => String(r.testType || '').trim().toLowerCase() === key);
+            const teacherEmailMap = new Map();
+            const studentEmails = [];
+            group.forEach(r => {
+              const te = String(r.teacherEmail || deriveTeacherEmail(r.teacherName)).trim();
+              if (te) teacherEmailMap.set(te.toLowerCase(), te);
+              if (r.email) studentEmails.push(String(r.email).trim());
+            });
+            const text = [...teacherEmailMap.values(), ...studentEmails].join(', ');
+            await copyText(text, 'To: addresses copied.');
           });
-          // teacher email row (auto-filled)
-          const autoEmail = (() => {
-            const name = response.teacherName || '';
-            if (!name) return '';
-            // simple last+firstinitial generation
-            const n = String(name).trim();
-            let last = '', first = '';
-            if (n.includes(',')) { const parts = n.split(',').map(p=>p.trim()); last = parts[0]; first = parts[1] || ''; }
-            else if (n.includes(' ')) { const parts = n.split(/\s+/); first = parts[0]; last = parts.slice(1).join(' '); }
-            else last = n;
-            const initial = first ? first.charAt(0).toLowerCase() : '';
-            return (last.toLowerCase() + initial + '@dlshs.org');
-          })();
-          html += `<div><label style="font-weight:600">Teacher Email</label><input type="email" name="teacherEmail" id="teacherEmail-${idx}" value="${escapeHtml(autoEmail)}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px" /></div>`;
-          html += `<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="copy-btn" data-idx="${idx}" style="background:#0366d6;color:white;padding:10px;border:none;border-radius:4px;cursor:pointer">Copy Email</button><button type="button" class="mark-sent-btn" data-idx="${idx}" style="background:#6f42c1;color:white;padding:10px;border:none;border-radius:4px;cursor:pointer">Mark As Sent</button></div>`;
-          html += `</form>`;
-          card.innerHTML = html;
-          el.appendChild(card);
+        });
 
-          // Copy email button: build a plain-text email body and copy to clipboard (for admin to paste into their mail client)
-          card.querySelector('.copy-btn').addEventListener('click', async () => {
-            const form = card.querySelector(`#form-${idx}`);
-            const formData = new FormData(form);
-            const updatedResponse = Object.fromEntries(formData);
+        // ── Copy Subject ──────────────────────────────────────────────────
+        el.querySelectorAll('.copy-subject-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const key = btn.dataset.type;
+            const cfg = TEST_TYPE_CONFIG.find(c => c.key === key);
+            await copyText(cfg.label, `Subject copied: "${cfg.label}"`);
+          });
+        });
 
-            const lines = [];
-            lines.push('Test Request Notification');
-            lines.push('========================');
-            for (const k of Object.keys(updatedResponse)) {
-              lines.push(`${k}: ${updatedResponse[k]}`);
-            }
-            const emailText = lines.join('\n');
+        // ── Copy Body (rich HTML table + plain-text fallback) ─────────────
+        el.querySelectorAll('.copy-body-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const key = btn.dataset.type;
+            const cfg = TEST_TYPE_CONFIG.find(c => c.key === key);
+            const group = data.filter(r => String(r.testType || '').trim().toLowerCase() === key);
+
+            // Build HTML version — pastes as a real table in Gmail / Outlook
+            const cols = ['Last','First','Teacher','Test Name','Grade','Date','Type','Period'];
+            let tableHtml = `<table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px">`;
+            tableHtml += `<thead><tr style="background:#f0f4f8">${cols.map(c => `<th style="padding:6px 10px;text-align:left">${c}</th>`).join('')}</tr></thead>`;
+            tableHtml += `<tbody>`;
+            group.forEach((r, i) => {
+              const bg = i % 2 === 0 ? '#ffffff' : '#f9f9f9';
+              const cells = [
+                escapeHtml(String(r.lastName  || '')),
+                escapeHtml(String(r.firstName || '')),
+                escapeHtml(toLastFirst(r.teacherName)),
+                escapeHtml(String(r.testName  || '')),
+                escapeHtml(String(r.grade     || '')),
+                escapeHtml(toSlashDate(r.testDate)),
+                escapeHtml(emailTypeString(key)),
+                escapeHtml(ordinal(r.period)),
+              ];
+              tableHtml += `<tr style="background:${bg}">${cells.map(c => `<td style="padding:6px 10px">${c}</td>`).join('')}</tr>`;
+            });
+            tableHtml += `</tbody></table>`;
+
+            // Boilerplate as HTML paragraphs
+            const boiler = emailBoilerplate(key)
+              .split('\n')
+              .map(line => line.trim() === '' ? '<br>' : `<p style="margin:4px 0">${escapeHtml(line)}</p>`)
+              .join('');
+            const fullHtml = tableHtml + '<br>' + boiler;
+
+            // Plain-text fallback (tab-separated, still pastes into Excel/Sheets)
+            const plainRows = group.map(r => [
+              String(r.lastName  || '').trim(),
+              String(r.firstName || '').trim(),
+              toLastFirst(r.teacherName),
+              String(r.testName  || '').trim(),
+              String(r.grade     || '').trim(),
+              toSlashDate(r.testDate),
+              emailTypeString(key),
+              ordinal(r.period),
+            ].join('\t'));
+            const plainText = plainRows.join('\n') + '\n\n' + emailBoilerplate(key);
 
             try {
-              await navigator.clipboard.writeText(emailText);
-              showToast('Email body copied to clipboard — paste into your mail client to send.');
+              await navigator.clipboard.write([
+                new ClipboardItem({
+                  'text/html':  new Blob([fullHtml],  { type: 'text/html' }),
+                  'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                }),
+              ]);
+              showToast('Email body copied — paste into Gmail to get a real table.');
             } catch (err) {
-              // fallback to prompt (modal) when clipboard API isn't available
-              window.prompt('Copy the email text below (Cmd+C):', emailText);
-            }
-          });
-
-          // Mark-as-sent button: mark the response as sent without sending an email
-          card.querySelector('.mark-sent-btn').addEventListener('click', async () => {
-            try {
-              const resp = await fetch('/api/admin/mark-sent', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ responseId: idx })
-              });
-              if (!resp.ok) {
-                const txt = await resp.text();
-                console.error('mark-sent failed', resp.status, txt);
-                alert('Failed to mark as sent');
-                return;
-              }
-              alert('Marked as sent');
-              card.remove();
-            } catch (err) {
-              console.error(err);
-              alert('Error marking as sent');
+              // Fallback: plain text still pastes into Sheets/Excel
+              await copyText(plainText, 'Email body copied (plain text).');
             }
           });
         });
+      }
+
+      async function copyText(text, toastMsg) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast(toastMsg);
+        } catch (err) {
+          window.prompt('Copy the text below (Cmd+C / Ctrl+C):', text);
+        }
+      }
+
+      // ── Email formatting helpers ──────────────────────────────────────
+
+      function ordinal(n) {
+        const num = parseInt(n, 10);
+        if (isNaN(num)) return String(n || '');
+        const v = num % 100;
+        const suffix = ['th','st','nd','rd'];
+        return num + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+      }
+
+      // Normalize teacher name to "Last, First" for the table column
+      function toLastFirst(name) {
+        const n = String(name || '').trim();
+        if (!n) return '';
+        if (n.includes(',')) return n; // already "Last, First"
+        const parts = n.split(/\s+/);
+        if (parts.length === 1) return n;
+        const first = parts[0];
+        const last = parts.slice(1).join(' ');
+        return `${last}, ${first}`;
+      }
+
+      // Derive teacher email from name (lastname + firstinitial @dlshs.org)
+      function deriveTeacherEmail(name) {
+        const n = String(name || '').trim();
+        if (!n) return '';
+        let last = '', first = '';
+        if (n.includes(',')) { const p = n.split(',').map(s => s.trim()); last = p[0]; first = p[1] || ''; }
+        else if (n.includes(' ')) { const p = n.split(/\s+/); first = p[0]; last = p.slice(1).join(' '); }
+        else { last = n; }
+        const initial = first ? first.charAt(0).toLowerCase() : '';
+        return last.toLowerCase() + initial + '@dlshs.org';
+      }
+
+      // Convert stored date (YYYY-MM-DD or M/D/YYYY) to M/D/YYYY
+      function toSlashDate(td) {
+        const s = String(td || '').trim();
+        const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) return `${parseInt(iso[2])}/${parseInt(iso[3])}/${iso[1]}`;
+        return s; // already slash format or unknown
+      }
+
+      // The verbatim test-type string that appears in the table column
+      function emailTypeString(key) {
+        if (key === 'makeup-after-school') return 'Make Up Testing (AFTERSCHOOL T-W-TH ONLY)';
+        if (key === 'finals-extended')     return 'Finals (Extended Time Only)';
+        return 'Extended Time Testing';
+      }
+
+      // Boilerplate body text per test type
+      function emailBoilerplate(key) {
+        if (key === 'makeup-after-school') {
+          return `--\nThis is for AFTER SCHOOL and is a reminder that you signed up to take your MAKE-UP test AFTER SCHOOL in Room 408\n\n \n\nStudents A Few Reminders:\n\nIt is AFTERSCHOOL\nCome to Room 408 to take your test\nMake sure you are quiet when you come into Room 408\nHave all the necessary materials needed for your test in 408\nMake sure you have your phone so that you can check in, in room 408\nTests must be completed in one sitting and completed by closing time (T-4:30, W/Th-4:00)\nAgain, tests will be in Room 408\n \n\nTeachers:\n\nPlease have the test to the LC by 8 am the day of the test\nPlease include any special instructions for your final on your test\nALL tests will be placed in "Completed Test" teachers boxes at the end of each testing day\n \n\nThank You All,\n \n\nSean Bristol\nLearning Needs Coordinator`;
+        }
+        if (key === 'finals-extended') {
+          return `--\nThis is a reminder that you are scheduled to take your FINALS with EXTENDED TIME in Room 408\n\n \n\nStudents A Few Reminders:\n\nCome to Room 408 at your scheduled finals period\nMake sure you are quiet when you come into Room 408\nHave all the necessary materials needed for your final\nMake sure you have your phone so that you can check in, in room 408\nTests must be completed in one sitting\nAgain, finals will be in Room 408\n \n\nTeachers:\n\nPlease have the test to the LC by 8 am the day of the final\nPlease include any special instructions for your final on your test\nALL tests will be placed in "Completed Test" teachers boxes at the end of each testing day\n \n\nThank You All,\n \n\nSean Bristol\nLearning Needs Coordinator`;
+        }
+        // extended-time
+        return `--\nThis is a reminder that you are scheduled to take your test with EXTENDED TIME in Room 408\n\n \n\nStudents A Few Reminders:\n\nCome to Room 408 at the start of your scheduled period\nMake sure you are quiet when you come into Room 408\nHave all the necessary materials needed for your test\nMake sure you have your phone so that you can check in, in room 408\nTests must be completed in one sitting\nAgain, tests will be in Room 408\n \n\nTeachers:\n\nPlease have the test to the LC by 8 am the day of the test\nPlease include any special instructions on your test\nALL tests will be placed in "Completed Test" teachers boxes at the end of each testing day\n \n\nThank You All,\n \n\nSean Bristol\nLearning Needs Coordinator`;
       }
 
       loadLogs();
