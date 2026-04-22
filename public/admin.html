@@ -285,6 +285,19 @@
           <button id="clearLogsBtnTab">Clear All Logs</button>
         </div>
       </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px">
+        <div style="flex:1;min-width:220px">
+          <label for="logStudentSearch" style="font-weight:600;font-size:15px;display:block;margin-bottom:6px">Search Students</label>
+          <input id="logStudentSearch" type="search" placeholder="Last name, first name, or both" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px" />
+        </div>
+        <div style="min-width:220px">
+          <label for="logDateFilter" style="font-weight:600;font-size:15px;display:block;margin-bottom:6px">Filter by Date</label>
+          <input id="logDateFilter" type="date" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:14px" />
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button id="clearLogFiltersBtn" class="secondary-btn" style="height:42px;padding:0 18px;">Clear Filters</button>
+        </div>
+      </div>
       <div class="data-table">
         <div id="logsContent" class="loading">Loading logs...</div>
       </div>
@@ -468,11 +481,57 @@
         try {
           const res = await fetch('/api/admin/logs', { credentials: 'include' });
           const logs = await res.json();
-          renderTable('logsContent', logs);
+          window.allLogs = logs;
+          applyLogFilters();
         } catch (err) {
           document.getElementById('logsContent').innerHTML = '<div class="error">Failed to load logs</div>';
         }
       }
+
+      function logDateMatches(row, dateVal) {
+        const candidates = [row.timestamp, row.logDate, row.testDate, row.date].filter(Boolean);
+        return candidates.some(value => {
+          const s = String(value).trim();
+          const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}` === dateVal;
+          const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (slash) return `${slash[3]}-${slash[1].padStart(2, '0')}-${slash[2].padStart(2, '0')}` === dateVal;
+          const dot = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+          if (dot) return `${dot[3]}-${dot[1].padStart(2, '0')}-${dot[2].padStart(2, '0')}` === dateVal;
+          return false;
+        });
+      }
+
+      function applyLogFilters() {
+        const query = document.getElementById('logStudentSearch').value.trim().toLowerCase();
+        const dateVal = document.getElementById('logDateFilter').value;
+        const logs = Array.isArray(window.allLogs) ? window.allLogs : [];
+        const filtered = logs.filter(row => {
+          const firstName = String(row.firstName || row.FirstName || row.first_name || '').toLowerCase();
+          const lastName = String(row.lastName || row.LastName || row.last_name || '').toLowerCase();
+          const fullNameA = `${firstName} ${lastName}`.trim();
+          const fullNameB = `${lastName} ${firstName}`.trim();
+          const studentMatch = !query || [firstName, lastName, fullNameA, fullNameB].some(v => v.includes(query));
+          const dateMatch = !dateVal || logDateMatches(row, dateVal);
+          return studentMatch && dateMatch;
+        });
+        renderTable('logsContent', filtered.length ? filtered : []);
+        if (filtered.length === 0 && logs.length > 0) {
+          document.getElementById('logsContent').innerHTML = '<div class="loading">No logs match the search criteria.</div>';
+        }
+      }
+
+      const logStudentSearch = document.getElementById('logStudentSearch');
+      const logDateFilter = document.getElementById('logDateFilter');
+      const clearLogFiltersBtn = document.getElementById('clearLogFiltersBtn');
+
+      logStudentSearch.addEventListener('input', applyLogFilters);
+      logDateFilter.addEventListener('change', applyLogFilters);
+      clearLogFiltersBtn.addEventListener('click', () => {
+        logStudentSearch.value = '';
+        logDateFilter.value = '';
+        applyLogFilters();
+      });
 
       async function loadStudents() {
         try {
