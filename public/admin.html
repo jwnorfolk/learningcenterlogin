@@ -283,6 +283,7 @@
         <h3>Data Management</h3>
         <div class="buttons">
           <button id="clearLogsBtnTab">Clear All Logs</button>
+          <button id="exportLogsBtn" class="secondary-btn">Export Logs</button>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:18px">
@@ -350,6 +351,7 @@
         <h3>Data Management</h3>
         <div class="buttons">
           <button id="clearResponsesBtnTab">Clear All Responses</button>
+          <button id="exportResponsesBtn" class="secondary-btn">Export Responses</button>
         </div>
       </div>
       <div class="data-table">
@@ -363,6 +365,7 @@
         <h3>Data Management</h3>
         <div class="buttons">
           <button id="clearTestLoginsBtnTab">Clear All Test Logins</button>
+          <button id="exportTestLoginsBtn" class="secondary-btn">Export Test Logins</button>
         </div>
       </div>
       <div class="data-table">
@@ -457,6 +460,18 @@
       clearLogsBtnTab.addEventListener('click', clearLogs);
       clearResponsesBtn.addEventListener('click', clearResponses);
       clearResponsesBtnTab.addEventListener('click', clearResponses);
+
+      const exportLogsBtn = document.getElementById('exportLogsBtn');
+      const exportResponsesBtn = document.getElementById('exportResponsesBtn');
+      const exportTestLoginsBtn = document.getElementById('exportTestLoginsBtn');
+
+      function exportXlsx(url) {
+        window.location.href = url;
+      }
+
+      if (exportLogsBtn) exportLogsBtn.addEventListener('click', () => exportXlsx('/api/admin/export/logs'));
+      if (exportResponsesBtn) exportResponsesBtn.addEventListener('click', () => exportXlsx('/api/admin/export/responses'));
+      if (exportTestLoginsBtn) exportTestLoginsBtn.addEventListener('click', () => exportXlsx('/api/admin/export/test-logins'));
 
       const tabs = document.querySelectorAll('.tab');
       const contents = document.querySelectorAll('.tab-content');
