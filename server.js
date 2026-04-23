@@ -141,6 +141,15 @@ function writeResponsesFile(responses) {
   XLSX.writeFile(wb, RESPONSES_XLSX);
 }
 
+function ensureWorkbookFile(filePath, headers, sheetName) {
+  if (!fs.existsSync(filePath)) {
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, filePath);
+  }
+}
+
 function appendResponseToFile(response) {
   const responses = readResponses();
   // Add sent flag (default false) and timestamp
@@ -449,6 +458,21 @@ app.get('/api/admin/test-logins', isAdminAuthenticated, (_req, res) => {
   }
 });
 
+app.get('/api/admin/export/test-logins', isAdminAuthenticated, (_req, res) => {
+  try {
+    if (!fs.existsSync(TEST_LOGINS_XLSX)) {
+      const ws = XLSX.utils.aoa_to_sheet([TEST_LOGIN_HEADERS]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'test-logins');
+      XLSX.writeFile(wb, TEST_LOGINS_XLSX);
+    }
+    res.download(TEST_LOGINS_XLSX, 'test-logins.xlsx');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to export test logins' });
+  }
+});
+
 // API: clear all test logins (admin only)
 app.post('/api/admin/clear-test-logins', isAdminAuthenticated, (_req, res) => {
   try {
@@ -576,6 +600,16 @@ app.get('/api/admin/logs', isAdminAuthenticated, (req, res) => {
   }
 });
 
+app.get('/api/admin/export/logs', isAdminAuthenticated, (req, res) => {
+  try {
+    ensureWorkbookFile(LOGS_XLSX, ['timestamp', 'firstName', 'lastName', 'grade', 'action'], 'logs');
+    res.download(LOGS_XLSX, 'logs.xlsx');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to export logs' });
+  }
+});
+
 // API: get all responses
 app.get('/api/admin/responses', isAdminAuthenticated, (req, res) => {
   try {
@@ -606,6 +640,18 @@ app.get('/api/admin/unsent-responses', isAdminAuthenticated, (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch unsent responses' });
+  }
+});
+
+app.get('/api/admin/export/responses', isAdminAuthenticated, (req, res) => {
+  try {
+    if (!fs.existsSync(RESPONSES_XLSX)) {
+      writeResponsesFile([]);
+    }
+    res.download(RESPONSES_XLSX, 'responses.xlsx');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to export responses' });
   }
 });
 
