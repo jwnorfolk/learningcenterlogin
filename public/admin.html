@@ -312,6 +312,14 @@
           <button id="clearLogFiltersBtn" class="secondary-btn" style="height:42px;padding:0 18px;">Clear Filters</button>
         </div>
       </div>
+      <div class="upload-section">
+        <h3>Import Logs File</h3>
+        <p>Upload a logs.xlsx file to replace the current log records. This will completely replace all existing log data.</p>
+        <form id="importLogsForm" enctype="multipart/form-data">
+          <input type="file" name="logsFile" accept=".xlsx" required>
+          <button type="submit">Import & Replace Logs</button>
+        </form>
+      </div>
       <div class="data-table">
         <div id="logsContent" class="loading">Loading logs...</div>
       </div>
@@ -367,6 +375,14 @@
           <button id="exportResponsesBtn" class="secondary-btn">Export Responses</button>
         </div>
       </div>
+      <div class="upload-section">
+        <h3>Import Responses File</h3>
+        <p>Upload a responses.xlsx file to replace the current test signup responses. This will completely replace all existing response data.</p>
+        <form id="importResponsesForm" enctype="multipart/form-data">
+          <input type="file" name="responsesFile" accept=".xlsx" required>
+          <button type="submit">Import & Replace Responses</button>
+        </form>
+      </div>
       <div class="data-table">
         <div id="responsesContent" class="loading">Loading responses...</div>
       </div>
@@ -380,6 +396,14 @@
           <button id="clearTestLoginsBtnTab">Clear All Test Logins</button>
           <button id="exportTestLoginsBtn" class="secondary-btn">Export Test Logins</button>
         </div>
+      </div>
+      <div class="upload-section">
+        <h3>Import Test Logins File</h3>
+        <p>Upload a test-logins.xlsx file to replace the current test login records. This will completely replace all existing test login data.</p>
+        <form id="importTestLoginsForm" enctype="multipart/form-data">
+          <input type="file" name="testLoginsFile" accept=".xlsx" required>
+          <button type="submit">Import & Replace Test Logins</button>
+        </form>
       </div>
       <div class="data-table">
         <div id="testLoginsContent" class="loading">Loading test logins...</div>
@@ -1039,6 +1063,81 @@
         // extended-time
         return `--\nThis is a reminder that you are scheduled to take your test with EXTENDED TIME in Room 408\n\n \n\nStudents A Few Reminders:\n\nCome to Room 408 at the start of your scheduled period\nMake sure you are quiet when you come into Room 408\nHave all the necessary materials needed for your test\nMake sure you have your phone so that you can check in, in room 408\nTests must be completed in one sitting\nAgain, tests will be in Room 408\n \n\nTeachers:\n\nPlease have the test to the LC by 8 am the day of the test\nPlease include any special instructions on your test\nALL tests will be placed in "Completed Test" teachers boxes at the end of each testing day\n \n\nThank You All,\n \n\nSean Bristol\nLearning Needs Coordinator`;
       }
+
+      // Handle logs file import
+      document.getElementById('importLogsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to replace the logs file? This will completely replace all existing log data.')) return;
+        try {
+          const res = await fetch('/api/admin/import-logs', {
+            credentials: 'include',
+            method: 'POST',
+            body: new FormData(e.target)
+          });
+          if (res.ok) {
+            const result = await res.json();
+            showToast(result.message || 'Logs file imported successfully');
+            e.target.reset();
+            loadLogs();
+          } else {
+            const error = await res.json();
+            showToast('Import failed: ' + (error.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error importing logs file');
+        }
+      });
+
+      // Handle responses file import
+      document.getElementById('importResponsesForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to replace the responses file? This will completely replace all existing response data.')) return;
+        try {
+          const res = await fetch('/api/admin/import-responses', {
+            credentials: 'include',
+            method: 'POST',
+            body: new FormData(e.target)
+          });
+          if (res.ok) {
+            const result = await res.json();
+            showToast(result.message || 'Responses file imported successfully');
+            e.target.reset();
+            loadResponses();
+          } else {
+            const error = await res.json();
+            showToast('Import failed: ' + (error.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error importing responses file');
+        }
+      });
+
+      // Handle test logins file import
+      document.getElementById('importTestLoginsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to replace the test logins file? This will completely replace all existing test login data.')) return;
+        try {
+          const res = await fetch('/api/admin/import-test-logins', {
+            credentials: 'include',
+            method: 'POST',
+            body: new FormData(e.target)
+          });
+          if (res.ok) {
+            const result = await res.json();
+            showToast(result.message || 'Test logins file imported successfully');
+            e.target.reset();
+            loadTestLogins();
+          } else {
+            const error = await res.json();
+            showToast('Import failed: ' + (error.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Error importing test logins file');
+        }
+      });
 
       loadLogs();
       loadStudents();

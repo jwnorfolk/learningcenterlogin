@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Testing Sign In — Learning Center</title>
+    <style>
+      body{font-family:system-ui,Arial,sans-serif;margin:0;padding:0;background-image:linear-gradient(rgba(255,255,255,0.75),rgba(255,255,255,0.75)),url('/data/background.jpg');background-attachment:fixed;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#fff;min-height:100vh;color:#243228;display:flex;flex-direction:column;align-items:center;}
+      .banner{display:flex;justify-content:space-between;align-items:center;padding:32px 36px;background:linear-gradient(90deg,#1f7a3f 0%,#1a5c31 100%);color:#fff;box-shadow:0 14px 38px rgba(26,92,49,0.16);width:100%;box-sizing:border-box;}
+      .banner h1{margin:0;font-size:3rem;font-weight:700;letter-spacing:-0.02em;}
+      .banner-link{cursor:pointer;color:#fff;text-decoration:none;background:rgba(255,255,255,0.16);padding:16px 32px;border-radius:999px;font-weight:600;font-size:1.05rem;transition:all 0.3s;border:1px solid rgba(255,255,255,0.25);}
+      .banner-link:hover{transform:translateY(-1px);background:rgba(255,255,255,0.22);box-shadow:0 10px 24px rgba(15,62,31,0.18);}
+      .form-shell{width:100%;max-width:700px;padding:24px;box-sizing:border-box;}
+      .note{background:#fff3cd;border:1px solid #ffeaa7;padding:20px;border-radius:8px;margin-bottom:28px;font-weight:500;color:#856404;border-left:4px solid #ffc107;font-size:1.05rem;}
+      .note p{margin:0 0 8px;}.note p:last-child{margin-bottom:0;}
+      form div{margin-bottom:20px;}
+      label{display:flex;flex-direction:column;font-weight:600;margin-bottom:10px;color:#333;font-size:1.05rem;}
+      input,select,textarea{padding:16px;border:1px solid #e9ecef;border-radius:8px;font-family:inherit;background:#f8f9fa;color:#333;transition:border-color 0.3s;font-size:1rem;}
+      input:focus,select:focus,textarea:focus{border-color:#0f3e1f;outline:none;}
+      input::placeholder,textarea::placeholder{color:#6c757d;}
+      input[type="email"],input[type="text"],input[type="date"],input[type="time"],select,textarea{width:100%;box-sizing:border-box;}
+      .required::after{content:" *";color:#ff6b6b;}
+      button[type="submit"]{padding:16px 32px;background:linear-gradient(90deg,#0f3e1f,#1a5c31);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:18px;font-weight:600;transition:all 0.3s;box-shadow:0 2px 8px rgba(15,62,31,0.2);}
+      button[type="submit"]:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,62,31,0.3);}
+      h2{color:#0f3e1f;font-size:2rem;font-weight:700;margin:0 0 28px;}
+      .honor-heading{font-weight:700;color:#0f3e1f;font-size:1.05rem;margin-bottom:12px;}
+      .honor-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;padding:14px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;}
+      .honor-item input[type="checkbox"]{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#0f3e1f;padding:0;border:none;}
+      .honor-item label{font-weight:400;font-size:0.95rem;line-height:1.55;cursor:pointer;margin:0;}
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <h1>Testing Sign In</h1>
+      <a class="banner-link" href="/testing.html">← Back</a>
+    </div>
+
+    <div style="display:flex;width:100%;justify-content:center;align-items:flex-start;flex:1;">
+      <div class="form-shell">
+        <h2>Log In to a Test</h2>
+        <div class="note">
+          <p>You must fill out this form PRIOR to taking a test.</p>
+          <p><strong>NOTE:</strong> Make-Up and Re-Take are different classifications.</p>
+        </div>
+        <form id="loginForm">
+          <div><label class="required">Last Name</label><input type="text" name="lastName" required /></div>
+          <div><label class="required">First Name</label><input type="text" name="firstName" required /></div>
+          <div>
+            <label class="required">What type of test are you taking?</label>
+            <select name="testType" required>
+              <option value="">-- Select --</option>
+              <option>Extended Time</option><option>Make-Up</option><option>Re-Take</option><option>Finals</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="required">Grade</label>
+            <select name="grade" required>
+              <option value="">-- Select --</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+          </div>
+          <div>
+            <label class="required">Teacher</label>
+            <select name="teacher" required id="loginTeacherSelect">
+              <option value="">-- Select --</option><option value="OTHER">OTHER</option>
+            </select>
+          </div>
+          <div id="loginOtherTeacherDiv" style="display:none">
+            <label>If "OTHER" was selected above, what is the teacher's last name?</label>
+            <input type="text" name="otherTeacher" />
+          </div>
+          <div>
+            <label class="required">Subject</label>
+            <select name="subject" required>
+              <option value="">-- Select --</option>
+              <option>Math</option><option>Science</option><option>English</option>
+              <option>History/Social Studies</option><option>Religion</option>
+              <option>World Language</option><option>Health</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <div class="honor-heading required">Click the Following</div>
+            <div class="honor-item"><input type="checkbox" id="hc1"><label for="hc1">I do hereby affirm, at the close of the examination, that I had no unlawful knowledge of the questions or answers prior to the test.</label></div>
+            <div class="honor-item"><input type="checkbox" id="hc2"><label for="hc2">I have neither given nor received assistance in answering any of these questions during the examination.</label></div>
+            <div class="honor-item"><input type="checkbox" id="hc3"><label for="hc3">I affirm I will not communicate in any way the exam's contents or answers to any student after the exam.</label></div>
+            <div class="honor-item"><input type="checkbox" id="hc4"><label for="hc4">I also affirm that during online testing, no aides or notes were used to help assist during the test.</label></div>
+            <div class="honor-item"><input type="checkbox" id="hc5"><label for="hc5">I understand and agree that if I am suspected of using any other assistance (including but not limited to cell phones, websites, notes, etc.) that I will be reported to the teacher and the deans and appropriate discipline will be taken.</label></div>
+          </div>
+          <div><button type="submit">Submit</button></div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      async function loadTeachers() {
+        try {
+          const res = await fetch('/api/teachers');
+          if (!res.ok) return;
+          const teachers = await res.json();
+          const select = document.getElementById('loginTeacherSelect');
+          select.innerHTML = '';
+          select.appendChild(new Option('-- Select --', ''));
+          teachers.forEach(t => {
+            const name = (typeof t === 'string' ? t : t.name || '').trim();
+            if (name) select.appendChild(new Option(name, name));
+          });
+          select.appendChild(new Option('OTHER', 'OTHER'));
+        } catch (err) { console.error('Failed to load teachers', err); }
+      }
+      loadTeachers();
+
+      document.getElementById('loginTeacherSelect').addEventListener('change', e => {
+        document.getElementById('loginOtherTeacherDiv').style.display = e.target.value === 'OTHER' ? 'block' : 'none';
+      });
+
+      document.getElementById('loginForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!['hc1','hc2','hc3','hc4','hc5'].every(id => document.getElementById(id).checked)) {
+          alert('Please read and check all honor code statements before submitting.');
+          return;
+        }
+        const data = Object.fromEntries(new FormData(e.target));
+        data.honorCodeAgreed = true;
+        try {
+          const res = await fetch('/api/submit-test-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (!res.ok) { alert('Failed to submit. Please try again.'); return; }
+          alert('You have been logged in. Good luck on your test!');
+          window.location.href = '/';
+        } catch (err) { alert('Failed to submit. Please try again.'); }
+      });
+    </script>
+  </body>
+</html>
