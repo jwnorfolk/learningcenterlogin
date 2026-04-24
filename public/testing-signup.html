@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Schedule a Test — Learning Center</title>
+    <style>
+      body{font-family:system-ui,Arial,sans-serif;margin:0;padding:0;background-image:linear-gradient(rgba(255,255,255,0.75),rgba(255,255,255,0.75)),url('/data/background.jpg');background-attachment:fixed;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#fff;min-height:100vh;color:#243228;display:flex;flex-direction:column;align-items:center;}
+      .banner{display:flex;justify-content:space-between;align-items:center;padding:32px 36px;background:linear-gradient(90deg,#1f7a3f 0%,#1a5c31 100%);color:#fff;box-shadow:0 14px 38px rgba(26,92,49,0.16);width:100%;box-sizing:border-box;}
+      .banner h1{margin:0;font-size:3rem;font-weight:700;letter-spacing:-0.02em;}
+      .banner-link{cursor:pointer;color:#fff;text-decoration:none;background:rgba(255,255,255,0.16);padding:16px 32px;border-radius:999px;font-weight:600;font-size:1.05rem;transition:all 0.3s;border:1px solid rgba(255,255,255,0.25);}
+      .banner-link:hover{transform:translateY(-1px);background:rgba(255,255,255,0.22);box-shadow:0 10px 24px rgba(15,62,31,0.18);}
+      .form-shell{width:100%;max-width:700px;padding:24px;box-sizing:border-box;}
+      .note{background:#fff3cd;border:1px solid #ffeaa7;padding:20px;border-radius:8px;margin-bottom:28px;font-weight:500;color:#856404;border-left:4px solid #ffc107;font-size:1.05rem;}
+      .note p{margin:0 0 8px;}.note p:last-child{margin-bottom:0;}
+      form div{margin-bottom:20px;}
+      label{display:flex;flex-direction:column;font-weight:600;margin-bottom:10px;color:#333;font-size:1.05rem;}
+      input,select,textarea{padding:16px;border:1px solid #e9ecef;border-radius:8px;font-family:inherit;background:#f8f9fa;color:#333;transition:border-color 0.3s;font-size:1rem;}
+      input:focus,select:focus,textarea:focus{border-color:#0f3e1f;outline:none;}
+      input::placeholder,textarea::placeholder{color:#6c757d;}
+      input[type="email"],input[type="text"],input[type="date"],input[type="time"],select,textarea{width:100%;box-sizing:border-box;}
+      .required::after{content:" *";color:#ff6b6b;}
+      button[type="submit"]{padding:16px 32px;background:linear-gradient(90deg,#0f3e1f,#1a5c31);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:18px;font-weight:600;transition:all 0.3s;box-shadow:0 2px 8px rgba(15,62,31,0.2);}
+      button[type="submit"]:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,62,31,0.3);}
+      h2{color:#0f3e1f;font-size:2rem;font-weight:700;margin:0 0 28px;}
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <h1>Schedule a Test</h1>
+      <a class="banner-link" href="/testing.html">← Back</a>
+    </div>
+
+    <div style="display:flex;width:100%;justify-content:center;align-items:flex-start;flex:1;">
+      <div class="form-shell">
+        <h2>Test Request — Make-Ups / Extended Time</h2>
+        <div class="note">
+          <p>You must complete this form <strong>AT LEAST 24 hours before your test.</strong> Test Requests <strong>AFTER 3 PM the day before</strong> will not be accepted.</p>
+        </div>
+        <div style="display:grid;gap:16px;margin-bottom:28px">
+          <div style="background:#e8f4ec;border:1px solid #b7dfc4;border-left:4px solid #1a7340;border-radius:8px;padding:16px 20px">
+            <p style="margin:0 0 10px;font-weight:700;color:#1a7340;font-size:1rem">EXTENDED TIME (REGULAR TESTS):</p>
+            <ul style="margin:0;padding-left:20px;color:#1a5c31;font-size:0.97rem;line-height:1.8">
+              <li>Only for students with pre-approved Extended Time</li>
+              <li>Make sure you sign up for the correct date and time</li>
+              <li>Check in with your teacher first</li>
+              <li>Testing in the Learning Center</li>
+            </ul>
+          </div>
+          <div style="background:#eef2fb;border:1px solid #c0cff5;border-left:4px solid #0366d6;border-radius:8px;padding:16px 20px">
+            <p style="margin:0 0 10px;font-weight:700;color:#0a4eaa;font-size:1rem">MAKE UP TESTS AFTER SCHOOL (REGULAR TESTS):</p>
+            <ul style="margin:0;padding-left:20px;color:#1a3a6e;font-size:0.97rem;line-height:1.8">
+              <li>Tuesday – Wednesday – Thursday only</li>
+              <li>Make sure you sign up for the correct date and time</li>
+              <li>Testing starts after school</li>
+              <li>Test must be completed by 4 PM</li>
+              <li>In Room 408</li>
+            </ul>
+          </div>
+        </div>
+        <form id="testForm">
+          <div><label class="required">School Email</label><input type="email" name="email" required /></div>
+          <div><label class="required">Your First Name</label><input type="text" name="firstName" required /></div>
+          <div><label class="required">Your Last Name</label><input type="text" name="lastName" required /></div>
+          <div>
+            <label class="required">What grade are you in?</label>
+            <select name="grade" required>
+              <option value="">-- Select --</option>
+              <option value="9">9th</option><option value="10">10th</option><option value="11">11th</option><option value="12">12th</option>
+            </select>
+          </div>
+          <div>
+            <label class="required">What type of test is this?</label>
+            <select name="testType" required>
+              <option value="">-- Select --</option>
+              <option value="extended-time">Extended Time</option>
+              <option value="makeup-after-school">Make Up Test (After School)</option>
+              <option value="finals-extended">Finals (Extended Time Only)</option>
+            </select>
+          </div>
+          <div>
+            <label class="required">What Subject?</label>
+            <select name="subject" required>
+              <option value="">-- Select --</option>
+              <option>Math</option><option>Science</option><option>English</option>
+              <option>History/Social Studies</option><option>Religion</option>
+              <option>World Language</option><option>Health</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="required">Teacher's Name (Put OTHER for CHS Teachers)</label>
+            <select name="teacherName" required id="schedTeacherSelect">
+              <option value="">-- Select --</option><option value="OTHER">OTHER</option>
+            </select>
+          </div>
+          <div id="schedOtherTeacherDiv" style="display:none">
+            <label>If You Chose "OTHER", what is the teacher's LAST NAME ONLY</label>
+            <input type="text" name="otherTeacherLastName" />
+          </div>
+          <div><label class="required">Name of Test (ie Chapter 12 test)</label><input type="text" name="testName" required /></div>
+          <div><label class="required">WHAT DATE ARE YOU TAKING THE TEST (NOT TODAY'S DATE):</label><input type="date" name="testDate" required /></div>
+          <div>
+            <label class="required">What Period is the Class?</label>
+            <select name="period" required>
+              <option value="">-- Select --</option>
+              <option value="1">Period 1</option><option value="2">Period 2</option><option value="3">Period 3</option>
+              <option value="4">Period 4</option><option value="5">Period 5</option><option value="6">Period 6</option>
+              <option value="7">Period 7</option><option value="0">Period 0</option>
+            </select>
+          </div>
+          <div><button type="submit">Submit</button></div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      async function loadTeachers() {
+        try {
+          const res = await fetch('/api/teachers');
+          if (!res.ok) return;
+          const teachers = await res.json();
+          const select = document.getElementById('schedTeacherSelect');
+          select.innerHTML = '';
+          select.appendChild(new Option('-- Select --', ''));
+          teachers.forEach(t => {
+            const name = (typeof t === 'string' ? t : t.name || '').trim();
+            if (name) select.appendChild(new Option(name, name));
+          });
+          select.appendChild(new Option('OTHER', 'OTHER'));
+        } catch (err) { console.error('Failed to load teachers', err); }
+      }
+      loadTeachers();
+
+      document.getElementById('schedTeacherSelect').addEventListener('change', e => {
+        document.getElementById('schedOtherTeacherDiv').style.display = e.target.value === 'OTHER' ? 'block' : 'none';
+      });
+
+      document.getElementById('testForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        try {
+          const res = await fetch('/api/submit-test-response', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+          });
+          if (!res.ok) { alert('Failed to submit form'); return; }
+          alert('Your response has been submitted!');
+          window.location.href = '/';
+        } catch (err) { alert('Failed to submit form'); }
+      });
+    </script>
+  </body>
+</html>

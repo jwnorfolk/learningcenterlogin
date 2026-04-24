@@ -800,6 +800,66 @@ async function sendTeacherNotification(response, teacherEmail) {
   });
 }
 
+// API: upload and replace logs.xlsx
+app.post('/api/admin/import-logs', isAdminAuthenticated, upload.single('logsFile'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const tempPath = req.file.path;
+    try {
+      const wb = XLSX.readFile(tempPath);
+      XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    } catch (err) {
+      fs.unlinkSync(tempPath);
+      return res.status(400).json({ error: 'Invalid XLSX file' });
+    }
+    fs.renameSync(tempPath, LOGS_XLSX);
+    res.json({ success: true, message: 'Logs file imported successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to import logs file' });
+  }
+});
+
+// API: upload and replace responses.xlsx
+app.post('/api/admin/import-responses', isAdminAuthenticated, upload.single('responsesFile'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const tempPath = req.file.path;
+    try {
+      const wb = XLSX.readFile(tempPath);
+      XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    } catch (err) {
+      fs.unlinkSync(tempPath);
+      return res.status(400).json({ error: 'Invalid XLSX file' });
+    }
+    fs.renameSync(tempPath, RESPONSES_XLSX);
+    res.json({ success: true, message: 'Responses file imported successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to import responses file' });
+  }
+});
+
+// API: upload and replace test-logins.xlsx
+app.post('/api/admin/import-test-logins', isAdminAuthenticated, upload.single('testLoginsFile'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const tempPath = req.file.path;
+    try {
+      const wb = XLSX.readFile(tempPath);
+      XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+    } catch (err) {
+      fs.unlinkSync(tempPath);
+      return res.status(400).json({ error: 'Invalid XLSX file' });
+    }
+    fs.renameSync(tempPath, TEST_LOGINS_XLSX);
+    res.json({ success: true, message: 'Test logins file imported successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to import test logins file' });
+  }
+});
+
 // API: upload and replace students.xlsx
 app.post('/api/admin/upload-students', isAdminAuthenticated, upload.single('studentsFile'), (req, res) => {
   try {
