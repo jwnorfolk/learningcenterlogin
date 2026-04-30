@@ -968,23 +968,20 @@ function autoLogoutStaleStudents() {
   }
 }
 
-// Schedule daily cleanup of old logs (runs once per day)
-function scheduleDailyCleanup() {
-  // Run cleanup once on startup
-  cleanupOldLogs();
-  cleanupOldResponses();
-
-  // Schedule to run every 24 hours
-  setInterval(() => {
-    console.log('[scheduler] Running daily log and response cleanup...');
-    cleanupOldLogs();
-    cleanupOldResponses();
-  }, 24 * 60 * 60 * 1000);
+function scheduleAutoLogoutAtMidnight() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0); // next local midnight
+  const msUntilMidnight = midnight - now;
+  setTimeout(() => {
+    autoLogoutStaleStudents();
+    scheduleAutoLogoutAtMidnight(); // reschedule for the following midnight
+  }, msUntilMidnight);
+  console.log(`[auto-logout] Next midnight reset in ${Math.round(msUntilMidnight / 60000)} minutes`);
 }
 
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
-  scheduleDailyCleanup();
   autoLogoutStaleStudents();
-  setInterval(autoLogoutStaleStudents, 60 * 60 * 1000); // check every hour
+  scheduleAutoLogoutAtMidnight();
 });
