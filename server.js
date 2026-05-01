@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const XLSX = require('xlsx');
-const { cleanupOldLogs, cleanupOldResponses } = require('./cleanup');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 
