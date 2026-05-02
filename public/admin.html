@@ -275,7 +275,7 @@
     <div class="header">
       <h1>Admin Dashboard</h1>
       <div class="buttons">
-        <button id="clearLogsBtn" class="clear-btn">Clear Logs</button>
+        <button id="clearLogsBtn" class="clear-btn" disabled title="Temporarily disabled">Clear Logs</button>
         <button id="clearResponsesBtn" class="clear-btn">Clear Responses</button>
         <a href="/">← Back to Home</a>
       </div>
@@ -295,7 +295,7 @@
       <div class="clear-section">
         <h3>Data Management</h3>
         <div class="buttons">
-          <button id="clearLogsBtnTab">Clear All Logs</button>
+          <button id="clearLogsBtnTab" disabled title="Temporarily disabled">Clear All Logs</button>
           <button id="exportLogsBtn" class="secondary-btn">Export Logs</button>
         </div>
       </div>
@@ -316,8 +316,8 @@
         <h3>Import Logs File</h3>
         <p>Upload a logs.xlsx file to replace the current log records. This will completely replace all existing log data.</p>
         <form id="importLogsForm" enctype="multipart/form-data">
-          <input type="file" name="logsFile" accept=".xlsx" required>
-          <button type="submit">Import & Replace Logs</button>
+          <input type="file" name="logsFile" accept=".xlsx" required disabled>
+          <button type="submit" disabled title="Temporarily disabled">Import & Replace Logs</button>
         </form>
       </div>
       <div class="data-table">
@@ -534,6 +534,7 @@
           const res = await fetch('/api/admin/logs', { credentials: 'include' });
           const logs = await res.json();
           window.allLogs = logs;
+          if (!logDateFilter.value) logDateFilter.value = new Date().toISOString().slice(0, 10);
           applyLogFilters();
         } catch (err) {
           document.getElementById('logsContent').innerHTML = '<div class="error">Failed to load logs</div>';
