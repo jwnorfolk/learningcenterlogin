@@ -42,7 +42,11 @@ function generateSessionId() {
   return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
 }
 
-const DATA_DIR = path.join(__dirname, 'data');
+// Bundled defaults shipped with the repo — never written to at runtime
+const BUNDLED_DATA_DIR = path.join(__dirname, 'data');
+// Set DATA_DIR env var to a Render Persistent Disk mount path in production
+const DATA_DIR = process.env.DATA_DIR || BUNDLED_DATA_DIR;
+
 const STUDENTS_XLSX = path.join(DATA_DIR, 'students.xlsx');
 const LOGS_XLSX = path.join(DATA_DIR, 'logs.xlsx');
 const TEST_LOGINS_XLSX = path.join(DATA_DIR, 'test-logins.xlsx');
@@ -79,8 +83,21 @@ app.use((req, res, next) => {
 app.use('/data', express.static(path.join(__dirname, 'data'), { maxAge: 0 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+// Ensure data directory exists and seed from bundled defaults on first boot
+function seedDataDir() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (DATA_DIR === BUNDLED_DATA_DIR) return;
+  const files = ['students.xlsx', 'logs.xlsx', 'responses.xlsx', 'test-logins.xlsx', 'teachers.xlsx', 'background.jpg'];
+  for (const file of files) {
+    const dest = path.join(DATA_DIR, file);
+    const src = path.join(BUNDLED_DATA_DIR, file);
+    if (!fs.existsSync(dest) && fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      console.log(`[seed] Copied ${file} to persistent data dir`);
+    }
+  }
+}
+seedDataDir();
 
 const RESPONSES_XLSX = path.join(DATA_DIR, 'responses.xlsx');
 
