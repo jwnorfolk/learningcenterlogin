@@ -828,7 +828,8 @@ app.post('/api/admin/import-logs', isAdminAuthenticated, upload.single('logsFile
       fs.unlinkSync(tempPath);
       return res.status(400).json({ error: 'Invalid XLSX file' });
     }
-    fs.renameSync(tempPath, LOGS_XLSX);
+    fs.copyFileSync(tempPath, LOGS_XLSX);
+    fs.unlinkSync(tempPath);
     res.json({ success: true, message: 'Logs file imported successfully' });
   } catch (err) {
     console.error(err);
@@ -848,7 +849,8 @@ app.post('/api/admin/import-responses', isAdminAuthenticated, upload.single('res
       fs.unlinkSync(tempPath);
       return res.status(400).json({ error: 'Invalid XLSX file' });
     }
-    fs.renameSync(tempPath, RESPONSES_XLSX);
+    fs.copyFileSync(tempPath, RESPONSES_XLSX);
+    fs.unlinkSync(tempPath);
     res.json({ success: true, message: 'Responses file imported successfully' });
   } catch (err) {
     console.error(err);
@@ -868,7 +870,8 @@ app.post('/api/admin/import-test-logins', isAdminAuthenticated, upload.single('t
       fs.unlinkSync(tempPath);
       return res.status(400).json({ error: 'Invalid XLSX file' });
     }
-    fs.renameSync(tempPath, TEST_LOGINS_XLSX);
+    fs.copyFileSync(tempPath, TEST_LOGINS_XLSX);
+    fs.unlinkSync(tempPath);
     res.json({ success: true, message: 'Test logins file imported successfully' });
   } catch (err) {
     console.error(err);
@@ -898,8 +901,8 @@ app.post('/api/admin/upload-students', isAdminAuthenticated, upload.single('stud
       return res.status(400).json({ error: 'Invalid XLSX file' });
     }
 
-    // Move the file to replace students.xlsx
-    fs.renameSync(tempPath, targetPath);
+    fs.copyFileSync(tempPath, targetPath);
+    fs.unlinkSync(tempPath);
     res.json({ success: true, message: 'Students file uploaded successfully' });
   } catch (err) {
     console.error(err);
