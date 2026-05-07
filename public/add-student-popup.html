@@ -57,10 +57,12 @@
         try {
           const res = await fetch('/api/admin/add-student', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ firstName, lastName, grade })
           });
-          if (!res.ok) throw new Error('Request failed');
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Request failed');
           // notify opener to refresh and close
           if (window.opener && !window.opener.closed) {
             try { window.opener.location.reload(); } catch(e) { /* ignore */ }
@@ -69,7 +71,7 @@
           setTimeout(() => window.close(), 500);
         } catch (err) {
           console.error(err);
-          status.textContent = 'Failed to add student';
+          status.textContent = err.message || 'Failed to add student';
         }
       });
     </script>

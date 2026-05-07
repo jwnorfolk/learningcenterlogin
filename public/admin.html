@@ -560,7 +560,7 @@
       }
 
       function logDateMatches(row, dateVal) {
-        const candidates = [row.timestamp, row.logDate, row.testDate, row.date].filter(Boolean);
+        const candidates = [row.loginTimestamp, row.logDate, row.testDate, row.date].filter(Boolean);
         return candidates.some(value => {
           const s = String(value).trim();
           const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);

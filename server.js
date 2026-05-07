@@ -117,13 +117,63 @@ function writeStudentsFile(students) {
   XLSX.writeFile(wb, STUDENTS_XLSX);
 }
 
-const LOG_HEADERS = ['timestamp', 'firstName', 'lastName', 'grade', 'subject', 'login', 'logout'];
+const LOG_HEADERS = ['loginTimestamp', 'logoutTimestamp', 'firstName', 'lastName', 'grade', 'subject'];
+
+function formatTimestamp(date) {
+  const d = date instanceof Date ? date : new Date();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const year = d.getFullYear();
+  const hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const h = hours % 12 || 12;
+  return `${month}/${day}/${year} ${h}:${minutes} ${ampm}`;
+}
+
+function normalizeLogEntry(e) {
+  // Migrate old format: had timestamp + login/logout columns
+  if (!e.loginTimestamp && !e.logoutTimestamp && e.timestamp) {
+    return {
+      loginTimestamp: e.login == 1 ? String(e.timestamp) : '',
+      logoutTimestamp: e.logout == 1 ? String(e.timestamp) : '',
+      firstName: e.firstName || '',
+      lastName: e.lastName || '',
+      grade: e.grade || '',
+      subject: e.subject || ''
+    };
+  }
+  return {
+    loginTimestamp: e.loginTimestamp || '',
+    logoutTimestamp: e.logoutTimestamp || '',
+    firstName: e.firstName || '',
+    lastName: e.lastName || '',
+    grade: e.grade || '',
+    subject: e.subject || ''
+  };
+}
 
 function writeLogsFile(logs) {
-  const ws = XLSX.utils.json_to_sheet(logs, { header: LOG_HEADERS });
+  const normalized = logs.map(normalizeLogEntry);
+  const ws = XLSX.utils.json_to_sheet(normalized, { header: LOG_HEADERS });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'logs');
   XLSX.writeFile(wb, LOGS_XLSX);
+}
+
+// Find the most recent open session for a student and fill in the logout time.
+// Returns true if a session was found and closed.
+function closeSession(logs, firstName, lastName, logoutTimestamp) {
+  for (let i = logs.length - 1; i >= 0; i--) {
+    const e = logs[i];
+    if (String(e.firstName) === String(firstName) &&
+        String(e.lastName) === String(lastName) &&
+        e.loginTimestamp && !e.logoutTimestamp) {
+      logs[i] = { ...e, logoutTimestamp };
+      return true;
+    }
+  }
+  return false;
 }
 
 function readResponses() {
@@ -265,7 +315,7 @@ function readLogs() {
   const wb = XLSX.readFile(LOGS_XLSX);
   const ws = wb.Sheets[wb.SheetNames[0]];
   const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  return data;
+  return data.map(normalizeLogEntry);
 }
 
 // Read teacher names and emails from data/teachers.xlsx rows 4..142, skipping blanks
@@ -421,17 +471,12 @@ app.post('/api/toggle', (req, res) => {
 
     // Append to logs
     const logs = readLogs();
-    const isLogin = student.loggedIn;
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      firstName: student.firstName,
-      lastName: student.lastName,
-      grade: student.grade,
-      subject: (isLogin && subject) ? String(subject) : '',
-      login: isLogin ? 1 : 0,
-      logout: isLogin ? 0 : 1
-    };
-    logs.push(logEntry);
+    const now = formatTimestamp(new Date());
+    if (student.loggedIn) {
+      logs.push({ loginTimestamp: now, logoutTimestamp: '', firstName: student.firstName, lastName: student.lastName, grade: student.grade, subject: subject ? String(subject) : '' });
+    } else {
+      closeSession(logs, student.firstName, student.lastName, now);
+    }
     writeLogsFile(logs);
 
     res.json(student);
@@ -919,6 +964,25 @@ app.post('/api/admin/upload-students', isAdminAuthenticated, upload.single('stud
   }
 });
 
+// API: add a single student
+app.post('/api/admin/add-student', isAdminAuthenticated, (req, res) => {
+  try {
+    const { firstName, lastName, grade } = req.body || {};
+    if (!firstName || !lastName || !grade) {
+      return res.status(400).json({ error: 'firstName, lastName, and grade are required' });
+    }
+    const students = readStudents();
+    const exists = students.some(s => String(s.firstName).toLowerCase() === String(firstName).toLowerCase() && String(s.lastName).toLowerCase() === String(lastName).toLowerCase());
+    if (exists) return res.status(409).json({ error: 'Student already exists' });
+    students.push({ firstName: String(firstName).trim(), lastName: String(lastName).trim(), grade: String(grade).trim(), loggedIn: false });
+    writeStudentsFile(students);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add student' });
+  }
+});
+
 // API: log out all currently logged-in students
 app.post('/api/admin/logout-all', isAdminAuthenticated, (req, res) => {
   try {
@@ -927,10 +991,10 @@ app.post('/api/admin/logout-all', isAdminAuthenticated, (req, res) => {
     if (loggedIn.length === 0) return res.json({ success: true, count: 0 });
     for (const s of students) s.loggedIn = false;
     writeStudentsFile(students);
-    const now = new Date().toISOString();
+    const now = formatTimestamp(new Date());
     const logs = readLogs();
     for (const s of loggedIn) {
-      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, subject: '', login: 0, logout: 1 });
+      closeSession(logs, s.firstName, s.lastName, now);
     }
     writeLogsFile(logs);
     res.json({ success: true, count: loggedIn.length });
@@ -975,7 +1039,8 @@ app.post('/api/admin/clear-responses', isAdminAuthenticated, (req, res) => {
 // Auto-logout: force out any student logged in since a previous calendar day
 function autoLogoutStaleStudents() {
   try {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const students = readStudents();
     const loggedIn = students.filter(s => s.loggedIn);
     if (loggedIn.length === 0) return;
@@ -983,18 +1048,21 @@ function autoLogoutStaleStudents() {
     const logs = readLogs();
     const lastLogin = {};
     for (const entry of logs) {
-      if (entry.login == 1) {
+      if (entry.loginTimestamp) {
         const key = `${entry.firstName}|${entry.lastName}`;
-        if (!lastLogin[key] || entry.timestamp > lastLogin[key]) {
-          lastLogin[key] = entry.timestamp;
+        const t = new Date(entry.loginTimestamp);
+        if (!lastLogin[key] || t > lastLogin[key]) {
+          lastLogin[key] = t;
         }
       }
     }
 
     const stale = loggedIn.filter(s => {
-      const ts = lastLogin[`${s.firstName}|${s.lastName}`];
-      if (!ts) return true; // no login record — treat as stale
-      return String(ts).slice(0, 10) < todayStr;
+      const t = lastLogin[`${s.firstName}|${s.lastName}`];
+      if (!t) return true; // no login record — treat as stale
+      const loginDay = new Date(t);
+      loginDay.setHours(0, 0, 0, 0);
+      return loginDay < today;
     });
 
     if (stale.length === 0) return;
@@ -1006,9 +1074,9 @@ function autoLogoutStaleStudents() {
     }
     writeStudentsFile(students);
 
-    const now = new Date().toISOString();
+    const now = formatTimestamp(new Date());
     for (const s of stale) {
-      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, subject: '', login: 0, logout: 1 });
+      closeSession(logs, s.firstName, s.lastName, now);
       console.log(`[auto-logout] ${s.firstName} ${s.lastName}`);
     }
     writeLogsFile(logs);
