@@ -117,8 +117,10 @@ function writeStudentsFile(students) {
   XLSX.writeFile(wb, STUDENTS_XLSX);
 }
 
+const LOG_HEADERS = ['timestamp', 'firstName', 'lastName', 'grade', 'subject', 'login', 'logout'];
+
 function writeLogsFile(logs) {
-  const ws = XLSX.utils.json_to_sheet(logs, { skipHeader: false });
+  const ws = XLSX.utils.json_to_sheet(logs, { header: LOG_HEADERS });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'logs');
   XLSX.writeFile(wb, LOGS_XLSX);
@@ -419,9 +421,16 @@ app.post('/api/toggle', (req, res) => {
 
     // Append to logs
     const logs = readLogs();
-    const action = student.loggedIn ? 'login' : 'logout';
-    const logEntry = { timestamp: new Date().toISOString(), firstName: student.firstName, lastName: student.lastName, grade: student.grade, action };
-    if (action === 'login' && subject) logEntry.subject = String(subject);
+    const isLogin = student.loggedIn;
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      firstName: student.firstName,
+      lastName: student.lastName,
+      grade: student.grade,
+      subject: (isLogin && subject) ? String(subject) : '',
+      login: isLogin ? 1 : 0,
+      logout: isLogin ? 0 : 1
+    };
     logs.push(logEntry);
     writeLogsFile(logs);
 
@@ -618,7 +627,7 @@ app.get('/api/admin/logs', isAdminAuthenticated, (req, res) => {
 
 app.get('/api/admin/export/logs', isAdminAuthenticated, (req, res) => {
   try {
-    ensureWorkbookFile(LOGS_XLSX, ['timestamp', 'firstName', 'lastName', 'grade', 'action'], 'logs');
+    ensureWorkbookFile(LOGS_XLSX, LOG_HEADERS, 'logs');
     res.download(LOGS_XLSX, 'logs.xlsx');
   } catch (err) {
     console.error(err);
@@ -910,10 +919,31 @@ app.post('/api/admin/upload-students', isAdminAuthenticated, upload.single('stud
   }
 });
 
+// API: log out all currently logged-in students
+app.post('/api/admin/logout-all', isAdminAuthenticated, (req, res) => {
+  try {
+    const students = readStudents();
+    const loggedIn = students.filter(s => s.loggedIn);
+    if (loggedIn.length === 0) return res.json({ success: true, count: 0 });
+    for (const s of students) s.loggedIn = false;
+    writeStudentsFile(students);
+    const now = new Date().toISOString();
+    const logs = readLogs();
+    for (const s of loggedIn) {
+      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, subject: '', login: 0, logout: 1 });
+    }
+    writeLogsFile(logs);
+    res.json({ success: true, count: loggedIn.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to log out all students' });
+  }
+});
+
 // API: clear all logs
 app.post('/api/admin/clear-logs', isAdminAuthenticated, (req, res) => {
   try {
-    const ws = XLSX.utils.aoa_to_sheet([['timestamp', 'firstName', 'lastName', 'grade', 'action']]);
+    const ws = XLSX.utils.aoa_to_sheet([LOG_HEADERS]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'logs');
     XLSX.writeFile(wb, LOGS_XLSX);
@@ -953,7 +983,7 @@ function autoLogoutStaleStudents() {
     const logs = readLogs();
     const lastLogin = {};
     for (const entry of logs) {
-      if (String(entry.action || '').toLowerCase() === 'login') {
+      if (entry.login == 1) {
         const key = `${entry.firstName}|${entry.lastName}`;
         if (!lastLogin[key] || entry.timestamp > lastLogin[key]) {
           lastLogin[key] = entry.timestamp;
@@ -978,7 +1008,7 @@ function autoLogoutStaleStudents() {
 
     const now = new Date().toISOString();
     for (const s of stale) {
-      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, action: 'auto-logout' });
+      logs.push({ timestamp: now, firstName: s.firstName, lastName: s.lastName, grade: s.grade, subject: '', login: 0, logout: 1 });
       console.log(`[auto-logout] ${s.firstName} ${s.lastName}`);
     }
     writeLogsFile(logs);

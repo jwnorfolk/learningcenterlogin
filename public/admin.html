@@ -295,6 +295,7 @@
       <div class="clear-section">
         <h3>Data Management</h3>
         <div class="buttons">
+          <button id="logoutAllBtn" style="background:linear-gradient(90deg,#1a6b2f,#28a745);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;">Log All Out</button>
           <button id="clearLogsBtnTab">Clear All Logs</button>
           <button id="exportLogsBtn" class="secondary-btn">Export Logs</button>
         </div>
@@ -492,6 +493,23 @@
           }
         }
       };
+
+      document.getElementById('logoutAllBtn').addEventListener('click', async () => {
+        if (!confirm('Log out all currently logged-in students?')) return;
+        try {
+          const res = await fetch('/api/admin/logout-all', { method: 'POST', credentials: 'include' });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(data.count > 0 ? `Logged out ${data.count} student(s)` : 'No students were logged in');
+            window.allLogs = null;
+            loadLogs();
+          } else {
+            showToast('Error: ' + (data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          showToast('Failed to log everyone out');
+        }
+      });
 
       clearLogsBtn.addEventListener('click', clearLogs);
       clearLogsBtnTab.addEventListener('click', clearLogs);
