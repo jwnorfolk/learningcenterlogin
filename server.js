@@ -117,18 +117,19 @@ function writeStudentsFile(students) {
   XLSX.writeFile(wb, STUDENTS_XLSX);
 }
 
-const LOG_HEADERS = ['loginTimestamp', 'logoutTimestamp', 'firstName', 'lastName', 'grade', 'subject'];
+const LOG_HEADERS = ['firstName', 'lastName', 'grade', 'subject', 'loginTimestamp', 'logoutTimestamp'];
 
 function formatTimestamp(date) {
   const d = date instanceof Date ? date : new Date();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const year = d.getFullYear();
-  const hours = d.getHours();
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const h = hours % 12 || 12;
-  return `${month}/${day}/${year} ${h}:${minutes} ${ampm}`;
+  return d.toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles',
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
 }
 
 function normalizeLogEntry(e) {
